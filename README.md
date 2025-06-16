@@ -1,51 +1,40 @@
 # 🌙 IlmTab - Your Daily Islamic Knowledge Companion
 
-_Transform every new browser tab into a moment of spiritual reflection and learning_
+IlmTab is a transformative browser extension that turns your new tab into a spiritual sanctuary. Every time you open a new tab, you're greeted with daily Quranic verses, authentic Hadith, and Islamic productivity tools, keeping you connected to your faith throughout your browsing experience.
 
-IlmTab is a beautiful Chrome browser extension that replaces your new tab page with daily Islamic knowledge, featuring Quranic verses, authentic Hadith, Islamic date, and productivity tools - all designed to keep you connected to your faith throughout your digital day.
-
-## ✨ Features
+## 🌟 Features
 
 ### 📖 Islamic Content
 
-- **Random Quranic Verses**: Daily ayahs with multiple translations and audio recitations
-- **Authentic Hadith**: Curated hadith from major collections (Bukhari, Muslim, Tirmidhi, etc.)
-- **Multiple Languages**: Support for Arabic, English, Urdu, and other languages
-- **Audio Recitations**: High-quality Quran recitations from renowned qaris
-- **Tafsir Integration**: Detailed explanations and interpretations of verses
+- **Daily Quran Verses**: Random Ayah display with multiple translations and audio recitations
+- **Hadith Collection**: Authentic Hadith from major collections (Bukhari, Muslim, Tirmidhi, etc.)
+- **Tafsir Integration**: Detailed commentary and explanations for Quranic verses
+- **Audio Recitations**: High-quality Quran recitations from renowned Qaris
+- **Favorites System**: Save and organize your favorite verses and Hadith
 
-### 🎨 Beautiful Interface
+### 🎨 Productivity & Wellness
 
-- **Dynamic Backgrounds**: Stunning nature photography from Unsplash
-- **Islamic Calendar**: Hijri date display alongside Gregorian calendar
-- **Responsive Design**: Works seamlessly on all screen sizes
-- **Modern UI**: Clean, Material-UI based design with glassmorphism effects
-
-### 📚 Personal Features
-
-- **Favorites System**: Save and organize your favorite verses and hadith
-- **Personal Notes**: Add reflections and notes to saved content
-- **To-Do List**: Islamic-themed task management
-- **Personalized Greetings**: Customizable Islamic greetings
-- **Weather Integration**: Current weather with Islamic date
+- **Islamic Calendar**: Hijri date display with important Islamic events
+- **Prayer Time Awareness**: Integrated with daily Islamic schedule
+- **Todo List**: Organize your daily tasks and goals
+- **Soft Reminders**: Gentle Islamic reminders and motivational content
+- **Weather Integration**: Current weather conditions for your location
 
 ### ⚙️ Customization
 
-- **Multiple Reciters**: Choose from various renowned Quran reciters
-- **Translation Options**: Multiple translation sources and languages
-- **Hadith Collections**: Select from major hadith books
-- **Location Settings**: Automatic or manual location for weather
-- **Content Preferences**: Toggle features on/off as needed
+- **Multiple Languages**: Support for Arabic, English, and other languages
+- **Audio Preferences**: Choose from various renowned Qaris
+- **Personalized Greetings**: Islamic greetings based on time of day
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
 - Node.js (v16 or higher)
-- npm or yarn
-- Chrome browser
+- npm or yarn package manager
 
-### Installation & Setup
+### Installation
 
 1. **Clone the repository**
 
@@ -54,217 +43,234 @@ IlmTab is a beautiful Chrome browser extension that replaces your new tab page w
    cd ilmtab
    ```
 
-2. **Set up the backend server**
+2. **Install dependencies**
 
    ```bash
+   # Install server dependencies
    cd server
    npm install
 
-   # Create environment file (optional)
-   cp .env.example .env
+   # Install client dependencies
+   cd ../client
+   npm install
+   ```
 
-   # Start the development server
+3. **Environment Setup**
+
+   ```bash
+   # Copy environment template
+   cd ../server
+   cp .env.example .env
+   ```
+
+4. **Configure API Keys** (Edit `server/.env`)
+
+   ```env
+   # Hadith API Configuration
+   HADITH_API_KEY=your_hadith_api_key_here
+
+   # Unsplash API Configuration (for background images)
+   UNSPLASH_ACCESS_KEY=your_unsplash_access_key_here
+
+   # Server Configuration
+   PORT=4000
+   NODE_ENV=development
+
+   # CORS Configuration
+   CORS_ORIGIN=http://localhost:3000
+   ```
+
+5. **Start the application**
+
+   ```bash
+   # Start the server (from server directory)
+   npm run dev
+
+   # In a new terminal, start the client (from client directory)
+   cd ../client
    npm run dev
    ```
 
-   The server will run on `http://localhost:4000`
+6. **Access the application**
+   - Open your browser and navigate to `http://localhost:3000`
+   - The server will be running on `http://localhost:4000`
 
-3. **Set up the frontend client**
+## 🔧 API Configuration
 
-   ```bash
-   cd ../client
-   npm install
+### Required API Keys
 
-   # Build the extension
-   npm run build
-   ```
+#### Hadith API
 
-4. **Load the extension in Chrome**
-   - Open Chrome and navigate to `chrome://extensions/`
-   - Enable "Developer mode" (toggle in top right)
-   - Click "Load unpacked"
-   - Select the `client/dist` folder
-   - The extension should now be loaded and active
+- **Purpose**: Fetches authentic Hadith collections
+- **How to get**: Visit [Hadith API](https://hadithapi.com/) and sign up for a free account
+- **Usage**: Free tier includes sufficient requests for personal use
 
-### Development Mode
+#### Unsplash API (Optional)
 
-For development with hot reloading:
+- **Purpose**: Provides beautiful background images
+- **How to get**: Visit [Unsplash Developers](https://unsplash.com/developers) and create an application
+- **Usage**: Free tier includes 50 requests per hour
 
-```bash
-# Terminal 1 - Start backend
-cd server
-npm run dev
+### API Endpoints
 
-# Terminal 2 - Start frontend development server
-cd client
-npm run dev
-```
+The server provides the following endpoints:
 
-Then load the `client` folder (not dist) as an unpacked extension in Chrome.
+- `GET /api/ayat/random` - Get a random Quran verse
+- `GET /api/hadith/random` - Get a random Hadith
+- `GET /api/tafsir/:surah/:ayah` - Get Tafsir for specific verse
+- `GET /health` - Health check endpoint
 
-## 🏗️ Project Structure
+## 📱 Usage
 
-```
-ilmtab/
-├── client/                 # Frontend React application
-│   ├── public/            # Static assets and manifest
-│   │   ├── manifest.json  # Chrome extension manifest
-│   │   └── index.html     # Main HTML file
-│   ├── src/
-│   │   ├── components/    # React components
-│   │   │   ├── AyahCard.jsx       # Quran verse display
-│   │   │   ├── HadithCard.jsx     # Hadith display
-│   │   │   ├── AudioPlayer.jsx    # Audio recitation player
-│   │   │   ├── DateTimeWeather.jsx # Date, time, weather
-│   │   │   ├── FavoritesModal.jsx  # Favorites management
-│   │   │   ├── SettingsModal.jsx   # Settings panel
-│   │   │   ├── ToDoList.jsx       # Task management
-│   │   │   └── ...
-│   │   ├── redux/         # State management
-│   │   │   ├── favoritesSlice.js  # Favorites state
-│   │   │   └── settingsSlice.js   # Settings state
-│   │   ├── constants/     # Configuration data
-│   │   │   ├── audioEditions.js   # Audio reciters
-│   │   │   ├── textEditions.js    # Text translations
-│   │   │   ├── hadithBooks.js     # Hadith collections
-│   │   │   └── tafsirsByLanguage.js # Tafsir sources
-│   │   ├── App.jsx        # Main application component
-│   │   └── store.js       # Redux store configuration
-│   ├── package.json       # Frontend dependencies
-│   └── vite.config.js     # Vite build configuration
-├── server/                # Backend Express server
-│   ├── routes/           # API endpoints
-│   │   ├── ayat.js       # Quran verses API
-│   │   ├── hadith.js     # Hadith API
-│   │   ├── tafsir.js     # Tafsir API
-│   │   └── health.js     # Health check
-│   ├── data/            # Static data files
-│   │   └── ayat.js      # Quran data
-│   ├── index.js         # Server entry point
-│   ├── package.json     # Backend dependencies
-│   └── .env.example     # Environment variables template
-├── setup-ilmtab.js      # Automated setup script
-└── README.md            # This file
-```
+### Daily Workflow
 
-## 🔧 Configuration
+1. **Morning**: Start your day with a random Ayah and its meaning
+2. **Planning**: Use the todo list to organize your daily tasks
+3. **Learning**: Read Hadith and explore Tafsir for deeper understanding
+4. **Reflection**: Save meaningful verses and Hadith to your favorites
+5. **Evening**: Review your accomplishments and spiritual growth
 
-### Environment Variables (Optional)
+### Key Features Guide
 
-Create a `.env` file in the `server` directory:
+#### Favorites System
 
-```env
-PORT=4000
-NODE_ENV=development
-# Add any API keys for external services here
-```
+- Click the heart icon on any Ayah or Hadith to save it
+- Access your favorites through the favorites modal
+- Organize your saved content for easy reference
 
-### Chrome Extension Permissions
+#### Audio Recitations
 
-The extension requires the following permissions:
+- Click the play button on any Ayah to hear its recitation
+- Choose from multiple renowned Qaris in settings
+- Adjust playback speed and volume as needed
 
-- `storage`: To save user preferences and favorites
-- `chrome_url_overrides`: To replace the new tab page
+#### Settings Customization
 
-## 🎯 Usage
-
-### Basic Navigation
-
-- **Switch Modes**: Use arrow buttons to toggle between Ayah and Hadith modes
-- **Navigate Content**: Use next/previous buttons to browse verses/hadith
-- **Continuous Mode**: Enable to read sequentially through content
-- **Favorites**: Click the heart icon to save content for later
-
-### Customization
-
-1. Click the **Settings** icon (⚙️) in the bottom left
-2. Configure your preferences:
-   - **Language**: Choose your preferred language for translations
-   - **Reciter**: Select your favorite Quran reciter
-   - **Location**: Set your location for accurate weather information
-   - **Hadith Collection**: Choose which hadith books to display
-   - **Features**: Toggle weather, greetings, and tasks on/off
-
-### Managing Favorites
-
-1. Click the **Favorites** icon (❤️) in the bottom left
-2. Browse your saved verses and hadith
-3. Add personal notes and reflections
-4. Organize and manage your collection
+- Access settings through the gear icon
+- Customize language preferences
+- Select preferred Qari for audio recitations
+- Adjust display preferences
 
 ## 🛠️ Development
 
-### Adding New Features
+### Project Structure
 
-1. **New Components**: Add React components in `client/src/components/`
-2. **API Endpoints**: Add new routes in `server/routes/`
-3. **State Management**: Extend Redux slices in `client/src/redux/`
-4. **Styling**: Use Material-UI components and custom CSS
-
-### Building for Production
-
-```bash
-# Build the extension
-cd client
-npm run build
-
-# The built extension will be in client/dist/
-# Load this folder as an unpacked extension in Chrome
+```
+ilmtab/
+├── client/                 # React frontend
+│   ├── src/
+│   │   ├── components/     # React components
+│   │   ├── redux/         # State management
+│   │   ├── constants/     # Configuration constants
+│   │   └── App.jsx        # Main application component
+│   ├── public/            # Static assets
+│   └── package.json       # Client dependencies
+├── server/                # Express backend
+│   ├── routes/           # API route handlers
+│   ├── data/             # Static data files
+│   ├── index.js          # Server entry point
+│   └── package.json      # Server dependencies
+└── README.md             # This file
 ```
 
-### Testing
+### Available Scripts
+
+#### Client (React + Vite)
 
 ```bash
-# Run frontend tests
-cd client
-npm test
-
-# Run backend tests
-cd server
-npm test
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run preview      # Preview production build
+npm run lint         # Run ESLint
 ```
+
+#### Server (Express)
+
+```bash
+npm start            # Start production server
+npm run dev          # Start development server with nodemon
+```
+
+### Technology Stack
+
+#### Frontend
+
+- **React 18**: Modern React with hooks and functional components
+- **Vite**: Fast build tool and development server
+- **Redux Toolkit**: State management for favorites and settings
+- **CSS3**: Custom styling with modern CSS features
+- **Responsive Design**: Mobile-first approach
+
+#### Backend
+
+- **Node.js**: JavaScript runtime
+- **Express.js**: Web application framework
+- **CORS**: Cross-origin resource sharing
+- **dotenv**: Environment variable management
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
+We welcome contributions to IlmTab! Here's how you can help:
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Make your changes**: Implement your feature or bug fix
+4. **Test thoroughly**: Ensure your changes work as expected
+5. **Commit your changes**: `git commit -m 'Add amazing feature'`
+6. **Push to the branch**: `git push origin feature/amazing-feature`
+7. **Open a Pull Request**: Describe your changes and their benefits
 
-## 📝 License
+### Development Guidelines
+
+- Follow existing code style and conventions
+- Add comments for complex logic
+- Test your changes thoroughly
+- Update documentation as needed
+- Respect Islamic values and content accuracy
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-- **Quran API**: Thanks to various Quran API providers for verse data
-- **Hadith Collections**: Authentic hadith from classical Islamic sources
-- **Unsplash**: Beautiful background photography
-- **Material-UI**: React component library
-- **Islamic Community**: For feedback and feature suggestions
+- **Quran API**: For providing access to Quranic text and translations
+- **Hadith API**: For authentic Hadith collections
+- **Islamic Community**: For guidance and feedback on Islamic content accuracy
+- **Open Source Contributors**: For their valuable contributions and suggestions
 
 ## 📞 Support
 
-- **Issues**: Report bugs and request features on [GitHub Issues](https://github.com/yourusername/ilmtab/issues)
-- **Discussions**: Join community discussions on [GitHub Discussions](https://github.com/yourusername/ilmtab/discussions)
-- **Email**: Contact me at safiuddinahmed.mohammad@gmail.com
+If you encounter any issues or have questions:
 
-## 🔄 Changelog
+1. **Check the documentation**: Most common issues are covered here
+2. **Search existing issues**: Someone might have already reported the problem
+3. **Create a new issue**: Provide detailed information about the problem
+4. **Join our community**: Connect with other users and contributors
 
-### v0.1.0 (Current)
+## 🔮 Roadmap
 
-- Initial release
-- Basic Quran and Hadith display
-- Favorites system
-- Settings panel
-- Weather integration
-- To-do list functionality
+### Upcoming Features
+
+- [ ] Prayer time notifications
+- [ ] Islamic calendar events
+- [ ] Quran reading progress tracking
+- [ ] Offline mode support
+- [ ] Mobile app version
+- [ ] Multiple theme options
+- [ ] Advanced search functionality
+- [ ] Social sharing features
+
+### Long-term Goals
+
+- Integration with Islamic learning platforms
+- Community features for sharing insights
+- Advanced analytics for spiritual growth tracking
+- Multi-language support expansion
+- Accessibility improvements
 
 ---
 
-_May Allah (SWT) accept this humble effort and make it a source of benefit for the Muslim ummah. Ameen._
+**May Allah (SWT) bless this project and make it beneficial for the Muslim Ummah. Ameen.**
 
-**"And whoever does righteous deeds, whether male or female, while being a believer - those will enter Paradise and will not be wronged, [even as much as] the speck on a date seed."** - Quran 4:124
+_"And whoever relies upon Allah - then He is sufficient for him. Indeed, Allah will accomplish His purpose."_ - Quran 65:3
