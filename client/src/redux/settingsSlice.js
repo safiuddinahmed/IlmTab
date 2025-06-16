@@ -1,7 +1,7 @@
 // src/redux/settingsSlice.js
 import { createSlice } from "@reduxjs/toolkit";
 
-const SETTINGS_VERSION = "1.1.0"; // Increment this when adding new settings
+const SETTINGS_VERSION = "1.2.0"; // Increment this when adding new settings
 
 const loadSettingsFromLocalStorage = () => {
   try {
@@ -42,9 +42,12 @@ const migrateSettings = (oldSettings) => {
     if (oldSettings.greetings) {
       migratedSettings.greetings = { ...migratedSettings.greetings, ...oldSettings.greetings };
     }
-    // Tasks setting might not exist in old settings, so it will use the default
     if (oldSettings.tasks) {
       migratedSettings.tasks = { ...migratedSettings.tasks, ...oldSettings.tasks };
+    }
+    // Background settings will use defaults for new installations
+    if (oldSettings.background) {
+      migratedSettings.background = { ...migratedSettings.background, ...oldSettings.background };
     }
   }
   
@@ -103,6 +106,12 @@ const defaultState = {
   },
   tasks: {
     enabled: true
+  },
+  background: {
+    refreshInterval: "newtab", // "newtab", "5min", "15min", "30min", "1hour", "1day", "1week"
+    lastRefreshTime: null,
+    currentImageUrl: null,
+    fallbackImageUrl: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80"
   }
 };
 
@@ -135,7 +144,7 @@ const settingsSlice = createSlice({
     saveSettingsToLocalStorage(state);
   },
 
-  // --- New Weather/DateTime reducers ---
+  // --- Weather/DateTime reducers ---
   setWeatherEnabled(state, action) {
     state.weather.enabled = action.payload;
     saveSettingsToLocalStorage(state);
@@ -175,6 +184,24 @@ const settingsSlice = createSlice({
   setTasksEnabled: (state, action) => {
     state.tasks.enabled = action.payload;
     saveSettingsToLocalStorage(state);
+  },
+
+  // --- Background reducers ---
+  setBackgroundRefreshInterval: (state, action) => {
+    state.background.refreshInterval = action.payload;
+    saveSettingsToLocalStorage(state);
+  },
+  setBackgroundLastRefreshTime: (state, action) => {
+    state.background.lastRefreshTime = action.payload;
+    saveSettingsToLocalStorage(state);
+  },
+  setBackgroundCurrentImageUrl: (state, action) => {
+    state.background.currentImageUrl = action.payload;
+    saveSettingsToLocalStorage(state);
+  },
+  setBackgroundFallbackImageUrl: (state, action) => {
+    state.background.fallbackImageUrl = action.payload;
+    saveSettingsToLocalStorage(state);
   }
   }
 });
@@ -194,7 +221,11 @@ export const {
   setHadithTranslationLanguage,
   setGreetingsEnabled,
   setName,
-  setTasksEnabled
+  setTasksEnabled,
+  setBackgroundRefreshInterval,
+  setBackgroundLastRefreshTime,
+  setBackgroundCurrentImageUrl,
+  setBackgroundFallbackImageUrl
 } = settingsSlice.actions;
 
 export default settingsSlice.reducer;

@@ -29,6 +29,10 @@ import {
   removeFavorite,
   updateNote,
 } from "./redux/favoritesSlice";
+import {
+  setBackgroundLastRefreshTime,
+  setBackgroundCurrentImageUrl,
+} from "./redux/settingsSlice";
 import hadithBooks from "./constants/hadithBooks";
 import axios from "axios";
 
@@ -70,40 +74,123 @@ function App() {
   const greetingsName = useSelector((state) => state.settings.greetings.name);
   const tasksEnabled = useSelector((state) => state.settings.tasks.enabled);
 
+  // Background settings
+  const backgroundSettings = useSelector((state) => state.settings.background);
+  const refreshInterval = backgroundSettings?.refreshInterval || "newtab";
+  const lastRefreshTime = backgroundSettings?.lastRefreshTime;
+  const currentImageUrl = backgroundSettings?.currentImageUrl;
+  const fallbackImageUrl = backgroundSettings?.fallbackImageUrl;
+
+  // Helper function to check if background should refresh
+  const shouldRefreshBackground = () => {
+    if (refreshInterval === "newtab") return true;
+    if (!lastRefreshTime) return true;
+
+    const now = Date.now();
+    const timeDiff = now - lastRefreshTime;
+
+    switch (refreshInterval) {
+      case "5min":
+        return timeDiff > 5 * 60 * 1000;
+      case "15min":
+        return timeDiff > 15 * 60 * 1000;
+      case "30min":
+        return timeDiff > 30 * 60 * 1000;
+      case "1hour":
+        return timeDiff > 60 * 60 * 1000;
+      case "1day":
+        return timeDiff > 24 * 60 * 60 * 1000;
+      case "1week":
+        return timeDiff > 7 * 24 * 60 * 60 * 1000;
+      default:
+        return true;
+    }
+  };
+
+  const fetchBackground = async () => {
+    try {
+      if (process.env.NODE_ENV === "development") {
+        const devImage =
+          "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80";
+        setBackgroundUrl(devImage);
+        setPhotoAuthorName("Annie Spratt");
+        setPhotoAuthorLink("https://unsplash.com/@anniespratt");
+        dispatch(setBackgroundCurrentImageUrl(devImage));
+        dispatch(setBackgroundLastRefreshTime(Date.now()));
+      } else {
+        const response = await axios.get(
+          "https://api.unsplash.com/photos/random",
+          {
+            params: {
+              query: "nature,sky",
+              orientation: "landscape",
+            },
+            headers: {
+              Authorization: `Client-ID ${ACCESS_KEY}`,
+            },
+          }
+        );
+        const data = response.data;
+        setBackgroundUrl(data.urls.full);
+        setPhotoAuthorName(data.user.name);
+        setPhotoAuthorLink(data.user.links.html);
+        dispatch(setBackgroundCurrentImageUrl(data.urls.full));
+        dispatch(setBackgroundLastRefreshTime(Date.now()));
+      }
+    } catch (err) {
+      console.error("Failed to load background image", err);
+      // Use fallback image
+      if (fallbackImageUrl) {
+        setBackgroundUrl(fallbackImageUrl);
+        setPhotoAuthorName("Fallback Image");
+        setPhotoAuthorLink("#");
+      }
+    }
+  };
+
   useEffect(() => {
-    const fetchBackground = async () => {
-      try {
-        if (process.env.NODE_ENV === "development") {
-          setBackgroundUrl(
-            "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80"
-          );
-          setPhotoAuthorName("Annie Spratt");
-          setPhotoAuthorLink("https://unsplash.com/@anniespratt");
-        } else {
-          const response = await axios.get(
-            "https://api.unsplash.com/photos/random",
-            {
-              params: {
-                query: "nature,sky",
-                orientation: "landscape",
-              },
-              headers: {
-                Authorization: `Client-ID ${ACCESS_KEY}`,
-              },
-            }
-          );
-          const data = response.data;
-          setBackgroundUrl(data.urls.full);
-          setPhotoAuthorName(data.user.name);
-          setPhotoAuthorLink(data.user.links.html);
-        }
-      } catch (err) {
-        console.error("Failed to load background image", err);
+    // Check if we should use cached image or fetch new one
+    if (currentImageUrl && !shouldRefreshBackground()) {
+      setBackgroundUrl(currentImageUrl);
+      setPhotoAuthorName("Cached Image");
+      setPhotoAuthorLink("#");
+    } else {
+      fetchBackground();
+    }
+  }, []);
+
+  // Set up interval for timed refreshes (not for "newtab" mode)
+  useEffect(() => {
+    if (refreshInterval === "newtab") return;
+
+    const getIntervalMs = () => {
+      switch (refreshInterval) {
+        case "5min":
+          return 5 * 60 * 1000;
+        case "15min":
+          return 15 * 60 * 1000;
+        case "30min":
+          return 30 * 60 * 1000;
+        case "1hour":
+          return 60 * 60 * 1000;
+        case "1day":
+          return 24 * 60 * 60 * 1000;
+        case "1week":
+          return 7 * 24 * 60 * 60 * 1000;
+        default:
+          return null;
       }
     };
 
-    fetchBackground();
-  }, []);
+    const intervalMs = getIntervalMs();
+    if (!intervalMs) return;
+
+    const interval = setInterval(() => {
+      fetchBackground();
+    }, intervalMs);
+
+    return () => clearInterval(interval);
+  }, [refreshInterval]);
 
   const fetchAyah = async (surah = null, ayah = null) => {
     try {

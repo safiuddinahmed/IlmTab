@@ -59,7 +59,7 @@ PORT=4000
 NODE_ENV=development
 
 # CORS Configuration
-CORS_ORIGIN=http://localhost:3000
+CORS_ORIGIN=http://localhost:5173
 `;
     writeFileSync(envPath, defaultEnv);
     log(`${colors.green}✓ Created default .env file${colors.reset}`);
@@ -96,7 +96,7 @@ ${colors.reset}`);
   log(`   ${colors.green}cd server && npm run dev${colors.reset}`);
   log(`\n   ${colors.yellow}# Terminal 2 - Start the frontend application${colors.reset}`);
   log(`   ${colors.green}cd client && npm run dev${colors.reset}`);
-  log(`\n${colors.blue}3.${colors.reset} Open your browser and navigate to: ${colors.green}http://localhost:3000${colors.reset}`);
+  log(`\n${colors.blue}3.${colors.reset} Open your browser and navigate to: ${colors.green}http://localhost:5173${colors.reset}`);
   
   log(`\n${colors.bold}May Allah (SWT) bless your learning journey! 🤲${colors.reset}`);
 }

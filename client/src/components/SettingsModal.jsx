@@ -11,10 +11,31 @@ import {
   Select,
   MenuItem,
   TextField,
-  FormControlLabel,
   Switch,
+  Paper,
+  Divider,
+  Chip,
+  Avatar,
+  Fade,
+  Slide,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
+import {
+  Close as CloseIcon,
+  MenuBook as MenuBookIcon,
+  AutoStories as AutoStoriesIcon,
+  Schedule as ScheduleIcon,
+  Wallpaper as WallpaperIcon,
+  Person as PersonIcon,
+  Assignment as AssignmentIcon,
+  Language as LanguageIcon,
+  VolumeUp as VolumeUpIcon,
+  Description as DescriptionIcon,
+  LocationOn as LocationOnIcon,
+  Thermostat as ThermostatIcon,
+  AccessTime as AccessTimeIcon,
+  Refresh as RefreshIcon,
+  Image as ImageIcon,
+} from "@mui/icons-material";
 import { tafsirsByLanguage } from "../constants/tafsirsByLanguage";
 import { textEditions } from "../constants/textEditions";
 import { audioEditions } from "../constants/audioEditions";
@@ -36,7 +57,176 @@ import {
   setGreetingsEnabled,
   setName,
   setTasksEnabled,
+  setBackgroundRefreshInterval,
+  setBackgroundFallbackImageUrl,
 } from "../redux/settingsSlice";
+
+// Enhanced styled components
+const StyledPaper = ({ children, title, icon, ...props }) => (
+  <Paper
+    elevation={2}
+    sx={{
+      p: 3,
+      mb: 3,
+      borderRadius: 3,
+      background:
+        "linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.9) 100%)",
+      border: "1px solid rgba(0,0,0,0.06)",
+      transition: "all 0.3s ease",
+      "&:hover": {
+        elevation: 4,
+        transform: "translateY(-2px)",
+        boxShadow: "0 8px 25px rgba(0,0,0,0.1)",
+      },
+    }}
+    {...props}
+  >
+    {title && (
+      <Box display="flex" alignItems="center" mb={2}>
+        {icon && (
+          <Avatar
+            sx={{
+              bgcolor: "primary.main",
+              width: 32,
+              height: 32,
+              mr: 2,
+              "& .MuiSvgIcon-root": { fontSize: 18 },
+            }}
+          >
+            {icon}
+          </Avatar>
+        )}
+        <Typography
+          variant="h6"
+          sx={{ fontWeight: 600, color: "text.primary" }}
+        >
+          {title}
+        </Typography>
+      </Box>
+    )}
+    {children}
+  </Paper>
+);
+
+const StyledFormControl = ({ children, ...props }) => (
+  <FormControl
+    fullWidth
+    sx={{
+      mt: 2,
+      "& .MuiOutlinedInput-root": {
+        borderRadius: 2,
+        transition: "all 0.3s ease",
+        "&:hover": {
+          "& .MuiOutlinedInput-notchedOutline": {
+            borderColor: "primary.main",
+          },
+        },
+        "&.Mui-focused": {
+          "& .MuiOutlinedInput-notchedOutline": {
+            borderWidth: 2,
+          },
+        },
+      },
+      "& .MuiInputLabel-root": {
+        fontWeight: 500,
+      },
+    }}
+    {...props}
+  >
+    {children}
+  </FormControl>
+);
+
+const StyledTextField = ({ children, ...props }) => (
+  <TextField
+    fullWidth
+    sx={{
+      mt: 2,
+      "& .MuiOutlinedInput-root": {
+        borderRadius: 2,
+        transition: "all 0.3s ease",
+        "&:hover": {
+          "& .MuiOutlinedInput-notchedOutline": {
+            borderColor: "primary.main",
+          },
+        },
+        "&.Mui-focused": {
+          "& .MuiOutlinedInput-notchedOutline": {
+            borderWidth: 2,
+          },
+        },
+      },
+      "& .MuiInputLabel-root": {
+        fontWeight: 500,
+      },
+    }}
+    {...props}
+  >
+    {children}
+  </TextField>
+);
+
+const ToggleCard = ({ title, description, checked, onChange, icon }) => (
+  <Paper
+    elevation={1}
+    sx={{
+      p: 3,
+      mb: 2,
+      borderRadius: 3,
+      background: checked
+        ? "linear-gradient(135deg, rgba(25, 118, 210, 0.08) 0%, rgba(25, 118, 210, 0.04) 100%)"
+        : "rgba(248, 250, 252, 0.8)",
+      border: checked
+        ? "2px solid rgba(25, 118, 210, 0.2)"
+        : "1px solid rgba(0,0,0,0.06)",
+      transition: "all 0.3s ease",
+      cursor: "pointer",
+      "&:hover": {
+        transform: "translateY(-1px)",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+      },
+    }}
+    onClick={() => onChange(!checked)}
+  >
+    <Box display="flex" justifyContent="space-between" alignItems="center">
+      <Box display="flex" alignItems="center" flex={1}>
+        {icon && (
+          <Avatar
+            sx={{
+              bgcolor: checked ? "primary.main" : "grey.400",
+              width: 40,
+              height: 40,
+              mr: 2,
+              transition: "all 0.3s ease",
+            }}
+          >
+            {icon}
+          </Avatar>
+        )}
+        <Box>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>
+            {title}
+          </Typography>
+          {description && (
+            <Typography variant="body2" color="text.secondary">
+              {description}
+            </Typography>
+          )}
+        </Box>
+      </Box>
+      <Switch
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        color="primary"
+        sx={{
+          "& .MuiSwitch-thumb": {
+            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+          },
+        }}
+      />
+    </Box>
+  </Paper>
+);
 
 export default function SettingsModal({ open, onClose }) {
   const dispatch = useDispatch();
@@ -125,6 +315,7 @@ export default function SettingsModal({ open, onClose }) {
       setSelectedCityIndex(0);
       if (data.results?.[0]) {
         dispatch(setLocation(data.results[0]));
+        setCitySearch(`${data.results[0].name}, ${data.results[0].country}`);
       }
     } catch (err) {
       console.error("City search error:", err);
@@ -144,10 +335,18 @@ export default function SettingsModal({ open, onClose }) {
 
   const tasksEnabled = useSelector((state) => state.settings.tasks.enabled);
 
+  // Background settings
+  const backgroundRefreshInterval = useSelector(
+    (state) => state.settings.background?.refreshInterval || "newtab"
+  );
+  const backgroundFallbackImageUrl = useSelector(
+    (state) => state.settings.background?.fallbackImageUrl || ""
+  );
+
   const [nameError, setNameError] = React.useState("");
 
   const handleNameChange = (e) => {
-    const input = e.target.value.trimStart(); // allow user to type naturally but trim start
+    const input = e.target.value.trimStart();
     if (input.length > 30) {
       setNameError("Name must be under 30 characters.");
     } else if (input.trim().length > 0 && input.trim().length < 2) {
@@ -159,380 +358,707 @@ export default function SettingsModal({ open, onClose }) {
     dispatch(setName(input));
   };
 
+  const tabData = [
+    { label: "Quran", icon: <MenuBookIcon /> },
+    { label: "Hadith", icon: <AutoStoriesIcon /> },
+    { label: "Time & Weather", icon: <ScheduleIcon /> },
+    { label: "Background", icon: <WallpaperIcon /> },
+    { label: "Greetings", icon: <PersonIcon /> },
+    { label: "Tasks", icon: <AssignmentIcon /> },
+  ];
+
   return (
-    <Modal open={open} onClose={onClose}>
-      <Box
-        sx={{
-          width: 500,
-          height: "calc(100vh - 80px)",
-          overflowY: "auto",
-          bgcolor: "background.paper",
-          p: 3,
-          borderRadius: "0 8px 8px 0",
-          boxShadow: 24,
-          position: "fixed",
-          top: 0,
-          left: 0,
-        }}
-      >
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="h6">Settings</Typography>
-          <IconButton onClick={onClose}>
-            <CloseIcon />
-          </IconButton>
-        </Box>
-
-        <Tabs
-          value={localTabIndex}
-          onChange={(e, val) => setLocalTabIndex(val)}
-          sx={{ mt: 2 }}
-          variant="scrollable"
-          scrollButtons="auto"
+    <Modal open={open} onClose={onClose} closeAfterTransition>
+      <Slide direction="right" in={open} mountOnEnter unmountOnExit>
+        <Box
+          sx={{
+            width: 480,
+            height: "100vh",
+            overflowY: "auto",
+            bgcolor: "rgba(255, 255, 255, 0.98)",
+            backdropFilter: "blur(20px)",
+            borderRadius: "0 20px 20px 0",
+            boxShadow: "0 25px 50px rgba(0, 0, 0, 0.15)",
+            position: "fixed",
+            top: 0,
+            left: 0,
+            border: "1px solid rgba(255, 255, 255, 0.2)",
+          }}
         >
-          <Tab label="Ayah" />
-          <Tab label="Hadith" />
-          <Tab label="Time and Weather" />
-          <Tab label="Greetings" />
-          <Tab label="Tasks" />
-        </Tabs>
-
-        {localTabIndex === 0 && (
-          <Box mt={3}>
-            <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
-              Configure Quranic verse settings including translation, audio
-              recitation, and tafsir (commentary) preferences. These settings
-              control how verses are displayed and played throughout the
-              application.
-            </Typography>
-
-            <Typography variant="subtitle1" gutterBottom>
-              Translation Settings
-            </Typography>
-
-            <FormControl fullWidth sx={{ mt: 2 }}>
-              <InputLabel>Language</InputLabel>
-              <Select
-                value={textEditionLanguage || ""}
-                onChange={handleTextEditionLanguageChange}
-                label="Language"
-              >
-                {Object.keys(textEditions).map((lang) => (
-                  <MenuItem key={lang} value={lang}>
-                    {lang.toUpperCase()}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth sx={{ mt: 2 }}>
-              <InputLabel>Translation</InputLabel>
-              <Select
-                value={textEditionIdentifier || ""}
-                onChange={handleTextEditionChange}
-                label="Translation"
-              >
-                {textEditions[textEditionLanguage]?.map((edition) => (
-                  <MenuItem key={edition.identifier} value={edition.identifier}>
-                    {edition.englishName}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <Typography variant="subtitle1" gutterBottom sx={{ mt: 4 }}>
-              Audio Edition Settings
-            </Typography>
-
-            <FormControl fullWidth sx={{ mt: 2 }}>
-              <InputLabel>Reciter</InputLabel>
-              <Select
-                value={audioEditionIdentifier || ""}
-                label="Reciter"
-                onChange={handleAudioEditionChange}
-              >
-                {audioEditions.map((reciter) => (
-                  <MenuItem key={reciter.identifier} value={reciter.identifier}>
-                    {reciter.englishName}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <Typography variant="subtitle1" gutterBottom sx={{ mt: 4 }}>
-              Tafsir Settings
-            </Typography>
-
-            <FormControl fullWidth sx={{ mt: 2 }}>
-              <InputLabel>Language</InputLabel>
-              <Select
-                value={tafsirLang || ""}
-                label="Language"
-                onChange={handleLangChange}
-              >
-                {Object.keys(tafsirsByLanguage).map((lang) => (
-                  <MenuItem key={lang} value={lang}>
-                    {lang.charAt(0).toUpperCase() + lang.slice(1)}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth sx={{ mt: 2 }}>
-              <InputLabel>Tafsir</InputLabel>
-              <Select
-                value={selectedTafsirId || ""}
-                label="Tafsir"
-                onChange={handleTafsirChange}
-              >
-                {tafsirsByLanguage[tafsirLang]?.map((tafsir) => (
-                  <MenuItem key={tafsir.id} value={tafsir.id}>
-                    {tafsir.name} – {tafsir.author_name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-        )}
-
-        {localTabIndex === 1 && (
-          <Box mt={3}>
-            <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
-              Configure Hadith settings to customize which collection and
-              translation language you prefer. Hadith are recorded sayings,
-              actions, and teachings of Prophet Muhammad (peace be upon him).
-            </Typography>
-
-            <Typography variant="subtitle1" gutterBottom>
-              Hadith Book
-            </Typography>
-
-            <FormControl fullWidth sx={{ mt: 2 }}>
-              <InputLabel>Book</InputLabel>
-              <Select
-                value={hadithSettings.book}
-                label="Book"
-                onChange={handleHadithBookChange}
-              >
-                {hadithBooks.map((book) => (
-                  <MenuItem key={book.slug} value={book.slug}>
-                    {book.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            {(() => {
-              const selectedBook = hadithBooks.find(
-                (book) => book.slug === hadithSettings.book
-              );
-              if (!selectedBook) return null;
-              return (
-                <Box mt={2}>
-                  <Typography variant="body2" color="textSecondary">
-                    <strong>Author:</strong> {selectedBook.writer}
-                  </Typography>
-                  {selectedBook.aboutWriter && (
-                    <Typography
-                      variant="body2"
-                      color="textSecondary"
-                      sx={{ mt: 1, fontStyle: "italic" }}
-                    >
-                      {selectedBook.aboutWriter}
-                    </Typography>
-                  )}
-                </Box>
-              );
-            })()}
-
-            <Typography variant="subtitle1" gutterBottom sx={{ mt: 4 }}>
-              Translation Language
-            </Typography>
-
-            <FormControl fullWidth sx={{ mt: 2 }}>
-              <InputLabel>Language</InputLabel>
-              <Select
-                value={hadithSettings.translationLanguage}
-                label="Language"
-                onChange={(e) =>
-                  dispatch(setHadithTranslationLanguage(e.target.value))
-                }
-              >
-                <MenuItem value="en">English</MenuItem>
-                <MenuItem value="ur">Urdu</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-        )}
-
-        {localTabIndex === 2 && (
-          <Box mt={3}>
-            <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
-              Configure time and weather display settings. When enabled, shows
-              current time and weather information for your selected location.
-              Customize time format, temperature units, and location
-              preferences.
-            </Typography>
-
+          {/* Header */}
+          <Box
+            sx={{
+              position: "sticky",
+              top: 0,
+              zIndex: 10,
+              bgcolor: "rgba(255, 255, 255, 0.95)",
+              backdropFilter: "blur(20px)",
+              borderBottom: "1px solid rgba(0, 0, 0, 0.06)",
+              p: 3,
+            }}
+          >
             <Box
               display="flex"
               justifyContent="space-between"
               alignItems="center"
-              sx={{
-                backgroundColor: "rgba(0,0,0,0.04)",
-                px: 2,
-                py: 1.5,
-                borderRadius: 2,
-                mb: 3,
-              }}
             >
-              <Typography variant="subtitle1">Show Time and Weather</Typography>
-              <Switch
-                checked={weatherEnabled}
-                onChange={(e) => dispatch(setWeatherEnabled(e.target.checked))}
-                color="primary"
-              />
-            </Box>
-
-            <Typography variant="subtitle1" gutterBottom>
-              Location Settings
-            </Typography>
-
-            <TextField
-              fullWidth
-              label="Search City"
-              value={citySearch}
-              onChange={(e) => setCitySearch(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleCitySearch();
-              }}
-              sx={{ mt: 2 }}
-            />
-
-            {cityOptions.length > 0 && (
-              <FormControl fullWidth sx={{ mt: 2 }}>
-                <InputLabel>Choose a City</InputLabel>
-                <Select
-                  value={selectedCityIndex}
-                  label="Choose a City"
-                  onChange={(e) => {
-                    setSelectedCityIndex(e.target.value);
-                    dispatch(setLocation(cityOptions[e.target.value]));
-                  }}
+              <Box>
+                <Typography
+                  variant="h5"
+                  sx={{ fontWeight: 700, color: "text.primary" }}
                 >
-                  {cityOptions.map((city, index) => (
-                    <MenuItem key={index} value={index}>
-                      {city.name}, {city.country}, {city.admin1 || ""}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
-
-            <TextField
-              fullWidth
-              label="Custom Location Display Name"
-              value={customDisplayName}
-              onChange={(e) => dispatch(setCustomLocationName(e.target.value))}
-              sx={{ mt: 2 }}
-            />
-
-            <FormControl fullWidth sx={{ mt: 4 }}>
-              <InputLabel>Time Format</InputLabel>
-              <Select
-                value={timeFormat}
-                onChange={(e) => dispatch(setTimeFormat(e.target.value))}
-                label="Time Format"
+                  ⚙️ Settings
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mt: 0.5 }}
+                >
+                  Customize your Islamic experience
+                </Typography>
+              </Box>
+              <IconButton
+                onClick={onClose}
+                sx={{
+                  bgcolor: "rgba(0, 0, 0, 0.04)",
+                  "&:hover": { bgcolor: "rgba(0, 0, 0, 0.08)" },
+                }}
               >
-                <MenuItem value="12h">12 Hour</MenuItem>
-                <MenuItem value="24h">24 Hour</MenuItem>
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth sx={{ mt: 2 }}>
-              <InputLabel>Temperature Unit</InputLabel>
-              <Select
-                value={tempUnit}
-                onChange={(e) => dispatch(setTemperatureUnit(e.target.value))}
-                label="Temperature Unit"
-              >
-                <MenuItem value="celsius">Celsius (°C)</MenuItem>
-                <MenuItem value="fahrenheit">Fahrenheit (°F)</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-        )}
-
-        {localTabIndex === 3 && (
-          <Box mt={3}>
-            <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
-              Configure personalized greeting settings. When enabled, displays a
-              personalized welcome message using your name. This adds a personal
-              touch to your spiritual journey and daily interactions with the
-              application.
-            </Typography>
-
-            <Box
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-              sx={{
-                backgroundColor: "rgba(0,0,0,0.04)",
-                px: 2,
-                py: 1.5,
-                borderRadius: 2,
-                mb: 3,
-              }}
-            >
-              <Typography variant="subtitle1">Show Greeting</Typography>
-              <Switch
-                checked={greetingsEnabled}
-                onChange={(e) =>
-                  dispatch(setGreetingsEnabled(e.target.checked))
-                }
-              />
+                <CloseIcon />
+              </IconButton>
             </Box>
-            {greetingsEnabled && (
-              <TextField
-                fullWidth
-                label="Your Name"
-                value={greetingsName}
-                onChange={handleNameChange}
-                placeholder="Enter your name"
-                error={!!nameError}
-                helperText={nameError}
-              />
-            )}
-          </Box>
-        )}
 
-        {localTabIndex === 4 && (
-          <Box mt={3}>
-            <Box
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
+            <Tabs
+              value={localTabIndex}
+              onChange={(e, val) => setLocalTabIndex(val)}
               sx={{
-                backgroundColor: "rgba(0,0,0,0.04)",
-                px: 2,
-                py: 1.5,
-                borderRadius: 2,
-                mb: 3,
+                mt: 3,
+                "& .MuiTab-root": {
+                  minHeight: 48,
+                  textTransform: "none",
+                  fontWeight: 600,
+                  fontSize: "0.875rem",
+                  "&.Mui-selected": {
+                    color: "primary.main",
+                  },
+                },
+                "& .MuiTabs-indicator": {
+                  height: 3,
+                  borderRadius: "3px 3px 0 0",
+                },
               }}
+              variant="scrollable"
+              scrollButtons="auto"
             >
-              <Typography variant="subtitle1">Show Tasks</Typography>
-              <Switch
-                checked={tasksEnabled}
-                onChange={(e) => dispatch(setTasksEnabled(e.target.checked))}
-                color="primary"
-              />
-            </Box>
-            <Typography variant="body2" color="textSecondary" sx={{ mt: 2 }}>
-              Toggle the Tasks component on or off. When enabled, you can manage
-              your daily tasks and to-do items directly from the main interface.
-            </Typography>
+              {tabData.map((tab, index) => (
+                <Tab
+                  key={index}
+                  label={tab.label}
+                  icon={tab.icon}
+                  iconPosition="start"
+                />
+              ))}
+            </Tabs>
           </Box>
-        )}
-      </Box>
+
+          {/* Content */}
+          <Box sx={{ p: 3 }}>
+            <Fade in={true} timeout={300}>
+              <Box>
+                {/* Quran Tab */}
+                {localTabIndex === 0 && (
+                  <Box>
+                    <StyledPaper
+                      title="Tafsir Settings"
+                      icon={<DescriptionIcon />}
+                    >
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mb: 3 }}
+                      >
+                        Choose your preferred language and commentary for deeper
+                        understanding of Quranic verses.
+                      </Typography>
+
+                      <StyledFormControl>
+                        <InputLabel>Tafsir Language</InputLabel>
+                        <Select
+                          value={tafsirLang}
+                          onChange={handleLangChange}
+                          label="Tafsir Language"
+                        >
+                          {Object.keys(tafsirsByLanguage).map((lang) => {
+                            const languageMap = {
+                              english: "🇺🇸 English",
+                              bengali: "🇧🇩 Bengali",
+                              arabic: "🇸🇦 Arabic",
+                              russian: "🇷🇺 Russian",
+                              urdu: "🇵🇰 Urdu",
+                              kurdish: "🏴 Kurdish",
+                            };
+                            return (
+                              <MenuItem key={lang} value={lang}>
+                                {languageMap[lang] ||
+                                  lang.charAt(0).toUpperCase() + lang.slice(1)}
+                              </MenuItem>
+                            );
+                          })}
+                        </Select>
+                      </StyledFormControl>
+
+                      <StyledFormControl>
+                        <InputLabel>Tafsir Commentary</InputLabel>
+                        <Select
+                          value={selectedTafsirId}
+                          onChange={handleTafsirChange}
+                          label="Tafsir Commentary"
+                        >
+                          {(tafsirsByLanguage[tafsirLang] || []).map(
+                            (tafsir) => (
+                              <MenuItem key={tafsir.id} value={tafsir.id}>
+                                {tafsir.name}
+                              </MenuItem>
+                            )
+                          )}
+                        </Select>
+                      </StyledFormControl>
+                    </StyledPaper>
+
+                    <StyledPaper title="Text Edition" icon={<MenuBookIcon />}>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mb: 3 }}
+                      >
+                        Select your preferred translation and text format for
+                        Quranic verses.
+                      </Typography>
+
+                      <StyledFormControl>
+                        <InputLabel>Text Language</InputLabel>
+                        <Select
+                          value={textEditionLanguage}
+                          onChange={handleTextEditionLanguageChange}
+                          label="Text Language"
+                        >
+                          {Object.keys(textEditions).map((lang) => {
+                            const languageMap = {
+                              en: "🇺🇸 English",
+                              fr: "🇫🇷 French",
+                              es: "🇪🇸 Spanish",
+                              ur: "🇵🇰 Urdu",
+                              id: "🇮🇩 Indonesian",
+                              hi: "🇮🇳 Hindi",
+                              ta: "🇮🇳 Tamil",
+                              az: "🇦🇿 Azerbaijani",
+                            };
+                            return (
+                              <MenuItem key={lang} value={lang}>
+                                {languageMap[lang] || lang.toUpperCase()}
+                              </MenuItem>
+                            );
+                          })}
+                        </Select>
+                      </StyledFormControl>
+
+                      <StyledFormControl>
+                        <InputLabel>Translation</InputLabel>
+                        <Select
+                          value={textEditionIdentifier}
+                          onChange={handleTextEditionChange}
+                          label="Translation"
+                        >
+                          {(textEditions[textEditionLanguage] || []).map(
+                            (edition) => (
+                              <MenuItem
+                                key={edition.identifier}
+                                value={edition.identifier}
+                              >
+                                {edition.englishName}
+                              </MenuItem>
+                            )
+                          )}
+                        </Select>
+                      </StyledFormControl>
+                    </StyledPaper>
+
+                    <StyledPaper
+                      title="Audio Recitation"
+                      icon={<VolumeUpIcon />}
+                    >
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mb: 3 }}
+                      >
+                        Choose your favorite Qari for beautiful Quranic
+                        recitations.
+                      </Typography>
+
+                      <StyledFormControl>
+                        <InputLabel>Reciter (Qari)</InputLabel>
+                        <Select
+                          value={audioEditionIdentifier}
+                          onChange={handleAudioEditionChange}
+                          label="Reciter (Qari)"
+                        >
+                          {audioEditions.map((edition) => (
+                            <MenuItem
+                              key={edition.identifier}
+                              value={edition.identifier}
+                            >
+                              {edition.englishName}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </StyledFormControl>
+                    </StyledPaper>
+                  </Box>
+                )}
+
+                {/* Hadith Tab */}
+                {localTabIndex === 1 && (
+                  <Box>
+                    <StyledPaper
+                      title="Hadith Collection"
+                      icon={<AutoStoriesIcon />}
+                    >
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mb: 3 }}
+                      >
+                        Select your preferred Hadith collection from authentic
+                        sources compiled by renowned Islamic scholars.
+                      </Typography>
+
+                      <StyledFormControl>
+                        <InputLabel>Hadith Book</InputLabel>
+                        <Select
+                          value={hadithSettings.book}
+                          onChange={handleHadithBookChange}
+                          label="Hadith Book"
+                        >
+                          {hadithBooks.map((book) => (
+                            <MenuItem key={book.slug} value={book.slug}>
+                              <Box>
+                                <Typography
+                                  variant="body1"
+                                  sx={{ fontWeight: 500 }}
+                                >
+                                  {book.name}
+                                </Typography>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                >
+                                  {book.hadithsCount.toLocaleString()} Hadiths
+                                </Typography>
+                              </Box>
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </StyledFormControl>
+
+                      <StyledFormControl>
+                        <InputLabel>Translation Language</InputLabel>
+                        <Select
+                          value={hadithSettings.translationLanguage}
+                          onChange={(e) =>
+                            dispatch(
+                              setHadithTranslationLanguage(e.target.value)
+                            )
+                          }
+                          label="Translation Language"
+                        >
+                          <MenuItem value="en">🇺🇸 English</MenuItem>
+                          <MenuItem value="ur">🇵🇰 Urdu</MenuItem>
+                        </Select>
+                      </StyledFormControl>
+                    </StyledPaper>
+                  </Box>
+                )}
+
+                {/* Time & Weather Tab */}
+                {localTabIndex === 2 && (
+                  <Box>
+                    <ToggleCard
+                      title="Weather & Time Display"
+                      description="Show current weather conditions and time information"
+                      checked={weatherEnabled}
+                      onChange={(checked) =>
+                        dispatch(setWeatherEnabled(checked))
+                      }
+                      icon={<ScheduleIcon />}
+                    />
+
+                    {weatherEnabled && (
+                      <>
+                        <StyledPaper
+                          title="Location Settings"
+                          icon={<LocationOnIcon />}
+                        >
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ mb: 3 }}
+                          >
+                            Set your location to get accurate weather
+                            information and local time.
+                          </Typography>
+
+                          <Box display="flex" gap={2} alignItems="flex-end">
+                            <StyledTextField
+                              label="Search City"
+                              value={citySearch}
+                              onChange={(e) => setCitySearch(e.target.value)}
+                              onKeyPress={(e) => {
+                                if (e.key === "Enter") {
+                                  handleCitySearch();
+                                }
+                              }}
+                              placeholder="Enter city name..."
+                              sx={{ flex: 1 }}
+                            />
+                            <IconButton
+                              onClick={handleCitySearch}
+                              sx={{
+                                mb: 0.25,
+                                bgcolor: "primary.main",
+                                color: "white",
+                                "&:hover": { bgcolor: "primary.dark" },
+                              }}
+                            >
+                              <LocationOnIcon />
+                            </IconButton>
+                          </Box>
+
+                          {cityOptions.length > 0 && (
+                            <StyledFormControl>
+                              <InputLabel>Select Location</InputLabel>
+                              <Select
+                                value={selectedCityIndex}
+                                onChange={(e) => {
+                                  const index = e.target.value;
+                                  setSelectedCityIndex(index);
+                                  const selectedCity = cityOptions[index];
+                                  if (selectedCity) {
+                                    dispatch(setLocation(selectedCity));
+                                    setCitySearch(
+                                      `${selectedCity.name}, ${selectedCity.country}`
+                                    );
+                                  }
+                                }}
+                                label="Select Location"
+                              >
+                                {cityOptions.map((city, index) => (
+                                  <MenuItem key={index} value={index}>
+                                    <Box>
+                                      <Typography
+                                        variant="body1"
+                                        sx={{ fontWeight: 500 }}
+                                      >
+                                        {city.name}
+                                      </Typography>
+                                      <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                      >
+                                        {city.admin1 && `${city.admin1}, `}
+                                        {city.country}
+                                        {city.population &&
+                                          ` • ${city.population.toLocaleString()} people`}
+                                      </Typography>
+                                    </Box>
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </StyledFormControl>
+                          )}
+
+                          <StyledTextField
+                            label="Custom Display Name"
+                            value={customDisplayName}
+                            onChange={(e) =>
+                              dispatch(setCustomLocationName(e.target.value))
+                            }
+                            onKeyPress={(e) => {
+                              if (e.key === "Enter") {
+                                e.target.blur();
+                              }
+                            }}
+                            placeholder="Optional custom name for your location"
+                            helperText="Leave empty to use the default city name"
+                          />
+                        </StyledPaper>
+
+                        <StyledPaper
+                          title="Display Preferences"
+                          icon={<AccessTimeIcon />}
+                        >
+                          <StyledFormControl>
+                            <InputLabel>Time Format</InputLabel>
+                            <Select
+                              value={timeFormat}
+                              onChange={(e) =>
+                                dispatch(setTimeFormat(e.target.value))
+                              }
+                              label="Time Format"
+                            >
+                              <MenuItem value="12h">
+                                🕐 12-hour (AM/PM)
+                              </MenuItem>
+                              <MenuItem value="24h">🕐 24-hour</MenuItem>
+                            </Select>
+                          </StyledFormControl>
+
+                          <StyledFormControl>
+                            <InputLabel>Temperature Unit</InputLabel>
+                            <Select
+                              value={tempUnit}
+                              onChange={(e) =>
+                                dispatch(setTemperatureUnit(e.target.value))
+                              }
+                              label="Temperature Unit"
+                            >
+                              <MenuItem value="celsius">
+                                🌡️ Celsius (°C)
+                              </MenuItem>
+                              <MenuItem value="fahrenheit">
+                                🌡️ Fahrenheit (°F)
+                              </MenuItem>
+                            </Select>
+                          </StyledFormControl>
+                        </StyledPaper>
+                      </>
+                    )}
+                  </Box>
+                )}
+
+                {/* Background Tab */}
+                {localTabIndex === 3 && (
+                  <Box>
+                    <StyledPaper
+                      title="Background Refresh"
+                      icon={<RefreshIcon />}
+                    >
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mb: 3 }}
+                      >
+                        Configure how often the background image refreshes.
+                        Choose from frequent updates to conserve API usage.
+                      </Typography>
+
+                      <StyledFormControl>
+                        <InputLabel>Refresh Interval</InputLabel>
+                        <Select
+                          value={backgroundRefreshInterval}
+                          onChange={(e) =>
+                            dispatch(
+                              setBackgroundRefreshInterval(e.target.value)
+                            )
+                          }
+                          label="Refresh Interval"
+                        >
+                          <MenuItem value="newtab">🔄 Every New Tab</MenuItem>
+                          <MenuItem value="5min">⏱️ Every 5 Minutes</MenuItem>
+                          <MenuItem value="15min">⏱️ Every 15 Minutes</MenuItem>
+                          <MenuItem value="30min">⏱️ Every 30 Minutes</MenuItem>
+                          <MenuItem value="1hour">⏰ Every Hour</MenuItem>
+                          <MenuItem value="1day">📅 Every Day</MenuItem>
+                          <MenuItem value="1week">📅 Every Week</MenuItem>
+                        </Select>
+                      </StyledFormControl>
+
+                      <Box
+                        sx={{
+                          mt: 2,
+                          p: 2,
+                          bgcolor: "rgba(25, 118, 210, 0.04)",
+                          borderRadius: 2,
+                        }}
+                      >
+                        <Typography
+                          variant="body2"
+                          color="primary.main"
+                          sx={{ fontWeight: 500 }}
+                        >
+                          💡 Tip: "Every New Tab" provides fresh images but uses
+                          more API quota. Longer intervals conserve usage while
+                          maintaining beautiful backgrounds.
+                        </Typography>
+                      </Box>
+                    </StyledPaper>
+
+                    <StyledPaper title="Custom Image" icon={<ImageIcon />}>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mb: 3 }}
+                      >
+                        Set a backup image URL that will be used when the API is
+                        unavailable or fails to load.
+                      </Typography>
+
+                      <StyledTextField
+                        label="Custom Image URL"
+                        value={backgroundFallbackImageUrl}
+                        onChange={(e) =>
+                          dispatch(
+                            setBackgroundFallbackImageUrl(e.target.value)
+                          )
+                        }
+                        onKeyPress={(e) => {
+                          if (e.key === "Enter") {
+                            e.target.blur();
+                          }
+                        }}
+                        placeholder="https://example.com/beautiful-image.jpg"
+                        helperText="This image will be displayed when the API is unavailable"
+                      />
+
+                      <Box
+                        sx={{
+                          mt: 2,
+                          p: 2,
+                          bgcolor: "rgba(76, 175, 80, 0.04)",
+                          borderRadius: 2,
+                        }}
+                      >
+                        <Typography
+                          variant="body2"
+                          color="success.main"
+                          sx={{ fontWeight: 500 }}
+                        >
+                          🏔️ Default: A beautiful mountain landscape provides a
+                          serene backdrop when other images are unavailable.
+                        </Typography>
+                      </Box>
+                    </StyledPaper>
+                  </Box>
+                )}
+
+                {/* Greetings Tab */}
+                {localTabIndex === 4 && (
+                  <Box>
+                    <ToggleCard
+                      title="Personal Greetings"
+                      description="Display personalized Islamic greetings with your name"
+                      checked={greetingsEnabled}
+                      onChange={(checked) =>
+                        dispatch(setGreetingsEnabled(checked))
+                      }
+                      icon={<PersonIcon />}
+                    />
+
+                    {greetingsEnabled && (
+                      <StyledPaper
+                        title="Greeting Settings"
+                        icon={<PersonIcon />}
+                      >
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ mb: 3 }}
+                        >
+                          Personalize your experience with Islamic greetings
+                          that change based on the time of day.
+                        </Typography>
+
+                        <StyledTextField
+                          label="Your Name"
+                          value={greetingsName}
+                          onChange={handleNameChange}
+                          onKeyPress={(e) => {
+                            if (e.key === "Enter") {
+                              e.target.blur();
+                            }
+                          }}
+                          placeholder="Enter your name"
+                          error={!!nameError}
+                          helperText={
+                            nameError ||
+                            "This will be used in your personalized greetings"
+                          }
+                        />
+
+                        <Box
+                          sx={{
+                            mt: 3,
+                            p: 2,
+                            bgcolor: "rgba(76, 175, 80, 0.04)",
+                            borderRadius: 2,
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            color="success.main"
+                            sx={{ fontWeight: 500 }}
+                          >
+                            🌅 Preview: "Assalamu Alaikum,{" "}
+                            {greetingsName || "Ahmad"}! May your morning be
+                            blessed."
+                          </Typography>
+                        </Box>
+                      </StyledPaper>
+                    )}
+                  </Box>
+                )}
+
+                {/* Tasks Tab */}
+                {localTabIndex === 5 && (
+                  <Box>
+                    <ToggleCard
+                      title="Task Management"
+                      description="Enable the todo list to organize your daily tasks and goals"
+                      checked={tasksEnabled}
+                      onChange={(checked) => dispatch(setTasksEnabled(checked))}
+                      icon={<AssignmentIcon />}
+                    />
+
+                    {tasksEnabled && (
+                      <StyledPaper
+                        title="Task Features"
+                        icon={<AssignmentIcon />}
+                      >
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ mb: 3 }}
+                        >
+                          The task management system helps you organize your
+                          daily activities and spiritual goals.
+                        </Typography>
+
+                        <Box
+                          sx={{
+                            mt: 2,
+                            p: 2,
+                            bgcolor: "rgba(76, 175, 80, 0.04)",
+                            borderRadius: 2,
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            color="success.main"
+                            sx={{ fontWeight: 500 }}
+                          >
+                            ✅ Features: Add tasks, mark as complete, organize
+                            by priority, and track your daily progress.
+                          </Typography>
+                        </Box>
+                      </StyledPaper>
+                    )}
+                  </Box>
+                )}
+              </Box>
+            </Fade>
+          </Box>
+        </Box>
+      </Slide>
     </Modal>
   );
 }

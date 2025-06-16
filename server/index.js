@@ -11,7 +11,7 @@ import hadithRoutes from './routes/hadith.js';
 const app = express();
 
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000'
+  origin: process.env.CORS_ORIGIN || 'http://localhost:4000'
 }));
 app.use(express.json());
 

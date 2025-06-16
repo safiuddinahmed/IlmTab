@@ -77,7 +77,7 @@ IlmTab is a transformative browser extension that turns your new tab into a spir
    NODE_ENV=development
 
    # CORS Configuration
-   CORS_ORIGIN=http://localhost:3000
+   CORS_ORIGIN=http://localhost:5173
    ```
 
 5. **Start the application**
@@ -92,7 +92,7 @@ IlmTab is a transformative browser extension that turns your new tab into a spir
    ```
 
 6. **Access the application**
-   - Open your browser and navigate to `http://localhost:3000`
+   - Open your browser and navigate to `http://localhost:5173`
    - The server will be running on `http://localhost:4000`
 
 ## 🔧 API Configuration
