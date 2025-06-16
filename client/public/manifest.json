@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "IlmTab",
+  "version": "0.1.0",
+  "description": "A daily dose of divine knowledge",
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "icons": {
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
