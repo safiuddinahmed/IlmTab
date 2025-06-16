@@ -59,6 +59,12 @@ import {
   setTasksEnabled,
   setBackgroundRefreshInterval,
   setBackgroundFallbackImageUrl,
+  setBackgroundImageSource,
+  setBackgroundIslamicCategory,
+  addBackgroundUploadedImage,
+  removeBackgroundUploadedImage,
+  setBackgroundBlurIntensity,
+  setBackgroundOpacity,
 } from "../redux/settingsSlice";
 
 // Enhanced styled components
@@ -342,6 +348,110 @@ export default function SettingsModal({ open, onClose }) {
   const backgroundFallbackImageUrl = useSelector(
     (state) => state.settings.background?.fallbackImageUrl || ""
   );
+  const backgroundImageSource = useSelector(
+    (state) => state.settings.background?.imageSource || "category"
+  );
+  const backgroundIslamicCategory = useSelector(
+    (state) => state.settings.background?.islamicCategory || "nature"
+  );
+  const backgroundUploadedImages = useSelector(
+    (state) => state.settings.background?.uploadedImages || []
+  );
+  const backgroundBlurIntensity = useSelector(
+    (state) => state.settings.background?.blurIntensity || 0
+  );
+  const backgroundOpacity = useSelector(
+    (state) => state.settings.background?.opacity || 100
+  );
+
+  const compressImage = (file, maxWidth = 1920, quality = 0.8) => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const img = new Image();
+
+      img.onload = () => {
+        // Calculate new dimensions
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+
+        // Set canvas size
+        canvas.width = width;
+        canvas.height = height;
+
+        // Draw and compress
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressedDataUrl = canvas.toDataURL("image/jpeg", quality);
+
+        console.log(
+          `Image compressed: ${file.size} bytes -> ${Math.round(
+            compressedDataUrl.length * 0.75
+          )} bytes`
+        );
+        resolve(compressedDataUrl);
+      };
+
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    console.log(
+      "File selected:",
+      file?.name,
+      "Size:",
+      file?.size,
+      "Current images count:",
+      backgroundUploadedImages.length
+    );
+
+    if (file && backgroundUploadedImages.length < 10) {
+      try {
+        // Check file size (limit to 5MB original)
+        if (file.size > 5 * 1024 * 1024) {
+          alert("Image too large. Please select an image smaller than 5MB.");
+          event.target.value = "";
+          return;
+        }
+
+        console.log("Compressing image...");
+        const compressedDataUrl = await compressImage(file);
+
+        // Check if compressed image is still too large for localStorage
+        const estimatedSize = compressedDataUrl.length;
+        if (estimatedSize > 1024 * 1024) {
+          // 1MB limit for compressed image
+          alert(
+            "Image is still too large after compression. Please select a smaller image."
+          );
+          event.target.value = "";
+          return;
+        }
+
+        console.log("File compressed, dispatching addBackgroundUploadedImage");
+        dispatch(addBackgroundUploadedImage(compressedDataUrl));
+        console.log("Dispatching setBackgroundImageSource to upload");
+        dispatch(setBackgroundImageSource("upload"));
+        // Reset the input to allow uploading the same file again
+        event.target.value = "";
+      } catch (error) {
+        console.error("Error processing image:", error);
+        alert("Error processing image. Please try a different image.");
+        event.target.value = "";
+      }
+    } else {
+      console.log(
+        "Upload blocked - file:",
+        !!file,
+        "images count:",
+        backgroundUploadedImages.length
+      );
+    }
+  };
 
   const [nameError, setNameError] = React.useState("");
 
@@ -839,8 +949,217 @@ export default function SettingsModal({ open, onClose }) {
                 {/* Background Tab */}
                 {localTabIndex === 3 && (
                   <Box>
+                    <StyledPaper title="Image Source" icon={<WallpaperIcon />}>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mb: 3 }}
+                      >
+                        Choose your preferred source for background images.
+                        Islamic categories ensure appropriate and respectful
+                        content.
+                      </Typography>
+
+                      <StyledFormControl>
+                        <InputLabel>Image Source</InputLabel>
+                        <Select
+                          value={backgroundImageSource}
+                          onChange={(e) =>
+                            dispatch(setBackgroundImageSource(e.target.value))
+                          }
+                          label="Image Source"
+                        >
+                          <MenuItem value="category">🕌 Unplash</MenuItem>
+                          <MenuItem value="upload">📁 Upload Your Own</MenuItem>
+                        </Select>
+                      </StyledFormControl>
+
+                      {backgroundImageSource === "category" && (
+                        <StyledFormControl>
+                          <InputLabel>Islamic Category</InputLabel>
+                          <Select
+                            value={backgroundIslamicCategory}
+                            onChange={(e) =>
+                              dispatch(
+                                setBackgroundIslamicCategory(e.target.value)
+                              )
+                            }
+                            label="Islamic Category"
+                          >
+                            <MenuItem value="nature">
+                              🌿 Nature & Landscapes
+                            </MenuItem>
+                            <MenuItem value="architecture">
+                              🕌 Islamic Architecture
+                            </MenuItem>
+                            <MenuItem value="calligraphy">
+                              ✍️ Arabic Calligraphy
+                            </MenuItem>
+                            <MenuItem value="geometric">
+                              🔷 Geometric Patterns
+                            </MenuItem>
+                          </Select>
+                        </StyledFormControl>
+                      )}
+
+                      {backgroundImageSource === "upload" && (
+                        <Box sx={{ mt: 2 }}>
+                          <input
+                            accept="image/*"
+                            style={{ display: "none" }}
+                            id="image-upload"
+                            type="file"
+                            onChange={handleImageUpload}
+                          />
+                          <label htmlFor="image-upload">
+                            <Box
+                              sx={{
+                                width: "100%",
+                                height: 80,
+                                border: "2px dashed",
+                                borderColor: "primary.main",
+                                borderRadius: 2,
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                cursor: "pointer",
+                                transition: "all 0.3s ease",
+                                "&:hover": {
+                                  bgcolor: "rgba(25, 118, 210, 0.04)",
+                                  borderColor: "primary.dark",
+                                },
+                              }}
+                            >
+                              <ImageIcon
+                                sx={{
+                                  fontSize: 32,
+                                  mb: 1,
+                                  color: "primary.main",
+                                }}
+                              />
+                              <Typography
+                                variant="body2"
+                                color="primary.main"
+                                sx={{ fontWeight: 500 }}
+                              >
+                                Click to Upload Image
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                {backgroundUploadedImages.length}/10 images
+                                uploaded
+                              </Typography>
+                            </Box>
+                          </label>
+                          {backgroundUploadedImages.length > 0 && (
+                            <Box sx={{ mt: 2 }}>
+                              <Typography
+                                variant="body2"
+                                sx={{ mb: 2, fontWeight: 500 }}
+                              >
+                                📁 Uploaded Images (
+                                {backgroundUploadedImages.length}/10)
+                              </Typography>
+                              <Box display="flex" flexWrap="wrap" gap={1}>
+                                {backgroundUploadedImages.map((image) => (
+                                  <Box
+                                    key={image.id}
+                                    sx={{
+                                      position: "relative",
+                                      width: 60,
+                                      height: 60,
+                                      borderRadius: 2,
+                                      overflow: "hidden",
+                                      border: "2px solid",
+                                      borderColor: "primary.main",
+                                    }}
+                                  >
+                                    <img
+                                      src={image.url}
+                                      alt={image.name}
+                                      style={{
+                                        width: "100%",
+                                        height: "100%",
+                                        objectFit: "cover",
+                                      }}
+                                    />
+                                    <IconButton
+                                      size="small"
+                                      onClick={() =>
+                                        dispatch(
+                                          removeBackgroundUploadedImage(
+                                            image.id
+                                          )
+                                        )
+                                      }
+                                      sx={{
+                                        position: "absolute",
+                                        top: -6,
+                                        right: -6,
+                                        bgcolor: "error.main",
+                                        color: "white",
+                                        width: 24,
+                                        height: 24,
+                                        boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+                                        border: "1px solid white",
+                                        "&:hover": {
+                                          bgcolor: "error.dark",
+                                          transform: "scale(1.1)",
+                                          boxShadow:
+                                            "0 4px 12px rgba(0,0,0,0.4)",
+                                        },
+                                        transition: "all 0.2s ease",
+                                      }}
+                                    >
+                                      <CloseIcon
+                                        sx={{
+                                          fontSize: 14,
+                                          fontWeight: "bold",
+                                        }}
+                                      />
+                                    </IconButton>
+                                  </Box>
+                                ))}
+                              </Box>
+                              {backgroundUploadedImages.length >= 10 && (
+                                <Typography
+                                  variant="caption"
+                                  color="warning.main"
+                                  sx={{ mt: 1, display: "block" }}
+                                >
+                                  ⚠️ Maximum of 10 images reached
+                                </Typography>
+                              )}
+                            </Box>
+                          )}
+                        </Box>
+                      )}
+
+                      <Box
+                        sx={{
+                          mt: 2,
+                          p: 2,
+                          bgcolor: "rgba(76, 175, 80, 0.04)",
+                          borderRadius: 2,
+                        }}
+                      >
+                        <Typography
+                          variant="body2"
+                          color="success.main"
+                          sx={{ fontWeight: 500 }}
+                        >
+                          🛡️ Islamic categories ensure only appropriate,
+                          respectful images are displayed, maintaining the
+                          spiritual atmosphere of your experience.
+                        </Typography>
+                      </Box>
+                    </StyledPaper>
+
                     <StyledPaper
-                      title="Background Refresh"
+                      title="Refresh Settings"
                       icon={<RefreshIcon />}
                     >
                       <Typography
@@ -849,7 +1168,6 @@ export default function SettingsModal({ open, onClose }) {
                         sx={{ mb: 3 }}
                       >
                         Configure how often the background image refreshes.
-                        Choose from frequent updates to conserve API usage.
                       </Typography>
 
                       <StyledFormControl>
@@ -872,39 +1190,20 @@ export default function SettingsModal({ open, onClose }) {
                           <MenuItem value="1week">📅 Every Week</MenuItem>
                         </Select>
                       </StyledFormControl>
-
-                      <Box
-                        sx={{
-                          mt: 2,
-                          p: 2,
-                          bgcolor: "rgba(25, 118, 210, 0.04)",
-                          borderRadius: 2,
-                        }}
-                      >
-                        <Typography
-                          variant="body2"
-                          color="primary.main"
-                          sx={{ fontWeight: 500 }}
-                        >
-                          💡 Tip: "Every New Tab" provides fresh images but uses
-                          more API quota. Longer intervals conserve usage while
-                          maintaining beautiful backgrounds.
-                        </Typography>
-                      </Box>
                     </StyledPaper>
 
-                    <StyledPaper title="Custom Image" icon={<ImageIcon />}>
+                    <StyledPaper title="Fallback Image" icon={<ImageIcon />}>
                       <Typography
                         variant="body2"
                         color="text.secondary"
                         sx={{ mb: 3 }}
                       >
-                        Set a backup image URL that will be used when the API is
-                        unavailable or fails to load.
+                        Set a backup image URL for when other sources are
+                        unavailable.
                       </Typography>
 
                       <StyledTextField
-                        label="Custom Image URL"
+                        label="Fallback Image URL"
                         value={backgroundFallbackImageUrl}
                         onChange={(e) =>
                           dispatch(
@@ -917,26 +1216,8 @@ export default function SettingsModal({ open, onClose }) {
                           }
                         }}
                         placeholder="https://example.com/beautiful-image.jpg"
-                        helperText="This image will be displayed when the API is unavailable"
+                        helperText="This image will be displayed when other sources fail"
                       />
-
-                      <Box
-                        sx={{
-                          mt: 2,
-                          p: 2,
-                          bgcolor: "rgba(76, 175, 80, 0.04)",
-                          borderRadius: 2,
-                        }}
-                      >
-                        <Typography
-                          variant="body2"
-                          color="success.main"
-                          sx={{ fontWeight: 500 }}
-                        >
-                          🏔️ Default: A beautiful mountain landscape provides a
-                          serene backdrop when other images are unavailable.
-                        </Typography>
-                      </Box>
                     </StyledPaper>
                   </Box>
                 )}

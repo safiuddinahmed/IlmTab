@@ -32,6 +32,7 @@ import {
 import {
   setBackgroundLastRefreshTime,
   setBackgroundCurrentImageUrl,
+  setBackgroundCurrentUploadedImageIndex,
 } from "./redux/settingsSlice";
 import hadithBooks from "./constants/hadithBooks";
 import axios from "axios";
@@ -80,6 +81,11 @@ function App() {
   const lastRefreshTime = backgroundSettings?.lastRefreshTime;
   const currentImageUrl = backgroundSettings?.currentImageUrl;
   const fallbackImageUrl = backgroundSettings?.fallbackImageUrl;
+  const imageSource = backgroundSettings?.imageSource || "category";
+  const islamicCategory = backgroundSettings?.islamicCategory || "nature";
+  const uploadedImages = backgroundSettings?.uploadedImages || [];
+  const currentUploadedImageIndex =
+    backgroundSettings?.currentUploadedImageIndex || 0;
 
   // Helper function to check if background should refresh
   const shouldRefreshBackground = () => {
@@ -108,21 +114,62 @@ function App() {
   };
 
   const fetchBackground = async () => {
+    console.log("fetchBackground called:", {
+      imageSource,
+      uploadedImagesCount: uploadedImages.length,
+    });
     try {
-      if (process.env.NODE_ENV === "development") {
-        const devImage =
-          "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80";
-        setBackgroundUrl(devImage);
-        setPhotoAuthorName("Annie Spratt");
-        setPhotoAuthorLink("https://unsplash.com/@anniespratt");
-        dispatch(setBackgroundCurrentImageUrl(devImage));
+      if (imageSource === "upload" && uploadedImages.length > 0) {
+        // Use uploaded images in sequential order
+        const imageIndex = currentUploadedImageIndex % uploadedImages.length;
+        const selectedImage = uploadedImages[imageIndex];
+        console.log(
+          "Using uploaded image:",
+          selectedImage.name,
+          "Index:",
+          imageIndex
+        );
+
+        // Update index for next refresh
+        const nextIndex =
+          (currentUploadedImageIndex + 1) % uploadedImages.length;
+        dispatch(setBackgroundCurrentUploadedImageIndex(nextIndex));
+        setBackgroundUrl(selectedImage.url);
+        setPhotoAuthorName("Your Upload");
+        setPhotoAuthorLink("#");
+        dispatch(setBackgroundCurrentImageUrl(selectedImage.url));
         dispatch(setBackgroundLastRefreshTime(Date.now()));
-      } else {
+        return; // Successfully set uploaded image
+      } else if (imageSource === "category") {
+        console.log("Using category mode");
+        // In development, use a static image to save API resources
+        if (process.env.NODE_ENV === "development") {
+          const devImage =
+            "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80";
+          setBackgroundUrl(devImage);
+          setPhotoAuthorName("Annie Spratt");
+          setPhotoAuthorLink("https://unsplash.com/@anniespratt");
+          dispatch(setBackgroundCurrentImageUrl(devImage));
+          dispatch(setBackgroundLastRefreshTime(Date.now()));
+          return;
+        }
+
+        // Use Islamic categories with Unsplash in production
+        const categoryQueries = {
+          nature: "nature,landscape,mountains,sky,peaceful",
+          architecture: "mosque,islamic architecture,minaret,dome",
+          calligraphy: "arabic calligraphy,islamic art,geometric",
+          geometric: "islamic pattern,geometric,mandala,symmetry",
+        };
+
+        const query =
+          categoryQueries[islamicCategory] || categoryQueries.nature;
+
         const response = await axios.get(
           "https://api.unsplash.com/photos/random",
           {
             params: {
-              query: "nature,sky",
+              query: query,
               orientation: "landscape",
             },
             headers: {
@@ -130,34 +177,50 @@ function App() {
             },
           }
         );
-        const data = response.data;
-        setBackgroundUrl(data.urls.full);
-        setPhotoAuthorName(data.user.name);
-        setPhotoAuthorLink(data.user.links.html);
-        dispatch(setBackgroundCurrentImageUrl(data.urls.full));
-        dispatch(setBackgroundLastRefreshTime(Date.now()));
+
+        if (response.data && response.data.urls && response.data.urls.full) {
+          const data = response.data;
+          setBackgroundUrl(data.urls.full);
+          setPhotoAuthorName(data.user.name);
+          setPhotoAuthorLink(data.user.links.html);
+          dispatch(setBackgroundCurrentImageUrl(data.urls.full));
+          dispatch(setBackgroundLastRefreshTime(Date.now()));
+          return; // Successfully set API image
+        } else {
+          throw new Error("Invalid API response");
+        }
       }
     } catch (err) {
       console.error("Failed to load background image", err);
-      // Use fallback image
-      if (fallbackImageUrl) {
-        setBackgroundUrl(fallbackImageUrl);
-        setPhotoAuthorName("Fallback Image");
-        setPhotoAuthorLink("#");
-      }
     }
+
+    // Always use fallback image if we reach here (API failed or no uploaded images)
+    const fallback =
+      fallbackImageUrl ||
+      "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80";
+    setBackgroundUrl(fallback);
+    setPhotoAuthorName("Fallback Image");
+    setPhotoAuthorLink("#");
+    dispatch(setBackgroundCurrentImageUrl(fallback));
+    dispatch(setBackgroundLastRefreshTime(Date.now()));
   };
 
   useEffect(() => {
-    // Check if we should use cached image or fetch new one
-    if (currentImageUrl && !shouldRefreshBackground()) {
-      setBackgroundUrl(currentImageUrl);
-      setPhotoAuthorName("Cached Image");
-      setPhotoAuthorLink("#");
-    } else {
+    // Always fetch background on initial load to ensure uploaded images are used
+    fetchBackground();
+  }, []);
+
+  // Watch for changes in background settings and refresh accordingly
+  useEffect(() => {
+    fetchBackground();
+  }, [imageSource, islamicCategory]);
+
+  // Separate effect to watch for uploaded images changes
+  useEffect(() => {
+    if (imageSource === "upload") {
       fetchBackground();
     }
-  }, []);
+  }, [uploadedImages.length, imageSource]);
 
   // Set up interval for timed refreshes (not for "newtab" mode)
   useEffect(() => {
@@ -571,7 +634,7 @@ function App() {
               userSelect: "none",
             }}
           >
-            Photo,{" "}
+            Photo by{" "}
             <a
               href={photoAuthorLink}
               target="_blank"
@@ -579,8 +642,8 @@ function App() {
               style={{ color: "#ddd", textDecoration: "underline" }}
             >
               {photoAuthorName}
-            </a>
-            ,{" "}
+            </a>{" "}
+            on{" "}
             <a
               href="https://unsplash.com"
               target="_blank"

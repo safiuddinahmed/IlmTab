@@ -68,9 +68,11 @@ const Greeting = ({ name = "Friend" }) => {
             fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
             userSelect: "none",
             minHeight: "3rem",
-            whiteSpace: "nowrap", // Prevent line wrap
-            overflow: "hidden", // Hide overflow text
-            textOverflow: "ellipsis", // Show "..." if text too long
+            lineHeight: 1.2,
+            textAlign: "center",
+            wordWrap: "break-word",
+            hyphens: "auto",
+            px: 2, // Add horizontal padding
           }}
         >
           {messages[messageIndex](name)}

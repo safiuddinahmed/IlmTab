@@ -63,9 +63,39 @@ const migrateSettings = (oldSettings) => {
 
 const saveSettingsToLocalStorage = (settings) => {
   try {
-    localStorage.setItem("settings", JSON.stringify(settings));
+    // Create a plain object copy to avoid Redux Toolkit's Proxy issues
+    const plainSettings = JSON.parse(JSON.stringify(settings));
+    const settingsString = JSON.stringify(plainSettings);
+    
+    // Check size before saving
+    const sizeInMB = (settingsString.length * 2) / (1024 * 1024); // Rough estimate
+    console.log(`Settings size: ${sizeInMB.toFixed(2)}MB`);
+    
+    localStorage.setItem("settings", settingsString);
+    console.log("Settings saved to localStorage successfully");
   } catch (e) {
-    console.error("Error saving settings:", e);
+    if (e.name === 'QuotaExceededError') {
+      console.error("localStorage quota exceeded. Clearing uploaded images to free space...");
+      
+      // Try to save without uploaded images as fallback
+      try {
+        const fallbackSettings = { ...settings };
+        if (fallbackSettings.background) {
+          fallbackSettings.background.uploadedImages = [];
+        }
+        const fallbackString = JSON.stringify(JSON.parse(JSON.stringify(fallbackSettings)));
+        localStorage.setItem("settings", fallbackString);
+        console.log("Settings saved without uploaded images as fallback");
+        
+        // Show user-friendly error
+        alert("Storage limit reached. Uploaded images have been cleared to save other settings. Please upload smaller images or fewer images.");
+      } catch (fallbackError) {
+        console.error("Failed to save even fallback settings:", fallbackError);
+        alert("Storage limit exceeded. Please clear your browser data or use smaller images.");
+      }
+    } else {
+      console.error("Error saving settings:", e);
+    }
   }
 };
 
@@ -102,7 +132,7 @@ const defaultState = {
   },
   greetings: {
     enabled: true,
-    name: "John Doe"
+    name: "User"
   },
   tasks: {
     enabled: true
@@ -111,7 +141,13 @@ const defaultState = {
     refreshInterval: "newtab", // "newtab", "5min", "15min", "30min", "1hour", "1day", "1week"
     lastRefreshTime: null,
     currentImageUrl: null,
-    fallbackImageUrl: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80"
+    fallbackImageUrl: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80",
+    imageSource: "category", // "category", "upload"
+    islamicCategory: "nature", // "nature", "architecture", "calligraphy", "geometric"
+    uploadedImages: [], // Array of uploaded images (max 10)
+    currentUploadedImageIndex: 0, // Track current image in sequence
+    blurIntensity: 0, // 0-10 blur level
+    opacity: 100 // 50-100 opacity percentage
   }
 };
 
@@ -202,6 +238,45 @@ const settingsSlice = createSlice({
   setBackgroundFallbackImageUrl: (state, action) => {
     state.background.fallbackImageUrl = action.payload;
     saveSettingsToLocalStorage(state);
+  },
+  setBackgroundImageSource: (state, action) => {
+    state.background.imageSource = action.payload;
+    saveSettingsToLocalStorage(state);
+  },
+  setBackgroundIslamicCategory: (state, action) => {
+    state.background.islamicCategory = action.payload;
+    saveSettingsToLocalStorage(state);
+  },
+  addBackgroundUploadedImage: (state, action) => {
+    // Add new image to the array (max 10)
+    if (state.background.uploadedImages.length < 10) {
+      const newImage = {
+        id: Date.now(),
+        url: action.payload,
+        name: `Image ${state.background.uploadedImages.length + 1}`
+      };
+      state.background.uploadedImages.push(newImage);
+      console.log("Added image to Redux state:", newImage.name, "Total images:", state.background.uploadedImages.length);
+    }
+    saveSettingsToLocalStorage(state);
+  },
+  removeBackgroundUploadedImage: (state, action) => {
+    state.background.uploadedImages = state.background.uploadedImages.filter(
+      img => img.id !== action.payload
+    );
+    saveSettingsToLocalStorage(state);
+  },
+  setBackgroundBlurIntensity: (state, action) => {
+    state.background.blurIntensity = action.payload;
+    saveSettingsToLocalStorage(state);
+  },
+  setBackgroundOpacity: (state, action) => {
+    state.background.opacity = action.payload;
+    saveSettingsToLocalStorage(state);
+  },
+  setBackgroundCurrentUploadedImageIndex: (state, action) => {
+    state.background.currentUploadedImageIndex = action.payload;
+    saveSettingsToLocalStorage(state);
   }
   }
 });
@@ -225,7 +300,14 @@ export const {
   setBackgroundRefreshInterval,
   setBackgroundLastRefreshTime,
   setBackgroundCurrentImageUrl,
-  setBackgroundFallbackImageUrl
+  setBackgroundFallbackImageUrl,
+  setBackgroundImageSource,
+  setBackgroundIslamicCategory,
+  addBackgroundUploadedImage,
+  removeBackgroundUploadedImage,
+  setBackgroundBlurIntensity,
+  setBackgroundOpacity,
+  setBackgroundCurrentUploadedImageIndex
 } = settingsSlice.actions;
 
 export default settingsSlice.reducer;
