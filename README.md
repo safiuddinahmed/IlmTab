@@ -39,7 +39,7 @@ IlmTab is a transformative browser extension that turns your new tab into a spir
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/yourusername/ilmtab.git
+   git clone https://github.com/safiuddinahmed/ilmtab.git
    cd ilmtab
    ```
 
