@@ -52,15 +52,15 @@ const HadithCard = ({
       const favoriteObject = {
         id: favoriteId,
         type: "hadith",
-        book: hadith.book,
+        book: hadith.bookSlug, // Use bookSlug for API calls
+        bookDisplayName: hadith.book, // Store display name separately
         hadithNumber: hadith.number,
         englishText: hadith.text.english || "",
         note: "",
       };
       dispatch(addFavorite(favoriteObject));
     }
-
-    if (onFavorite) onFavorite();
+    // Remove the onFavorite callback call to prevent duplicates
   };
 
   return (

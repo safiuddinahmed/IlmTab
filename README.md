@@ -1,6 +1,6 @@
 # 🌙 IlmTab - Your Daily Islamic Knowledge Companion
 
-IlmTab is a transformative browser extension that turns your new tab into a spiritual sanctuary. Every time you open a new tab, you're greeted with daily Quranic verses, authentic Hadith, and Islamic productivity tools, keeping you connected to your faith throughout your browsing experience.
+IlmTab is a transformative browser extension that turns your new tab into a spiritual sanctuary. Every time you open a new tab, you're greeted with daily Quran verses, authentic Hadith, and Islamic productivity tools, keeping you connected to your faith throughout your browsing experience.
 
 ## 🌟 Features
 
@@ -10,7 +10,7 @@ IlmTab is a transformative browser extension that turns your new tab into a spir
 - **Hadith Collection**: Authentic Hadith from major collections (Bukhari, Muslim, Tirmidhi, etc.)
 - **Tafsir Integration**: Detailed commentary and explanations for Quranic verses
 - **Audio Recitations**: High-quality Quran recitations from renowned Qaris
-- **Favorites System**: Save and organize your favorite verses and Hadith
+- **Enhanced Favorites System**: Save, organize, and navigate your favorite Quran verses and Hadith with personal notes
 
 ### 🎨 Productivity & Wellness
 
@@ -127,16 +127,20 @@ The server provides the following endpoints:
 1. **Morning**: Start your day with a random Ayah and its meaning
 2. **Planning**: Use the todo list to organize your daily tasks
 3. **Learning**: Read Hadith and explore Tafsir for deeper understanding
-4. **Reflection**: Save meaningful verses and Hadith to your favorites
+4. **Reflection**: Save meaningful Quran verses and Hadith to your favorites
 5. **Evening**: Review your accomplishments and spiritual growth
 
 ### Key Features Guide
 
-#### Favorites System
+#### Enhanced Favorites System
 
-- Click the heart icon on any Ayah or Hadith to save it
-- Access your favorites through the favorites modal
-- Organize your saved content for easy reference
+- **Save Content**: Click the heart icon on any Ayah or Hadith to save it to your favorites
+- **Organized Tabs**: Access your favorites through the favorites modal with separate tabs for Ayahs and Hadiths
+- **Personal Notes**: Add, edit, and save personal notes for each favorite item
+- **Quick Navigation**: Click on any favorite item to instantly navigate back to that specific verse or hadith
+- **Smart Display**: Surah names are automatically displayed (e.g., "Al-A'raf, Ayah 82") for easy identification
+- **Expandable Text**: Long texts can be expanded or collapsed for better readability
+- **Easy Management**: Delete favorites you no longer need with a simple click
 
 #### Audio Recitations
 

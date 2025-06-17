@@ -56,8 +56,12 @@ const favoritesSlice = createSlice({
   reducers: {
     addFavorite: (state, action) => {
       const item = action.payload;
-      state.items.push(item);
-      saveFavoritesToLocalStorage(state.items);
+      // Check if item already exists to prevent duplicates
+      const exists = state.items.some(existingItem => existingItem.id === item.id);
+      if (!exists) {
+        state.items.push(item);
+        saveFavoritesToLocalStorage(state.items);
+      }
     },
     removeFavorite: (state, action) => {
       const id = action.payload;

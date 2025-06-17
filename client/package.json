@@ -1,7 +1,7 @@
 {
   "name": "ilmtab-client",
   "version": "0.1.0",
-  "description": "Frontend React application for IlmTab - Islamic knowledge browser extension",
+  "description": "Frontend React application for IlmTab - Islamic knowledge companion with enhanced favorites, audio recitations, and spiritual productivity tools",
   "private": true,
   "scripts": {
     "dev": "vite",

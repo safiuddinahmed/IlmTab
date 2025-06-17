@@ -9,16 +9,20 @@ import {
   Divider,
   TextField,
   Tooltip,
+  Paper,
+  Slide,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
-import SaveIcon from "@mui/icons-material/Save";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import {
+  Close as CloseIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  Save as SaveIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+} from "@mui/icons-material";
 
 function TabPanel({ children, value, index }) {
-  return value === index ? <Box sx={{ pt: 2 }}>{children}</Box> : null;
+  return value === index ? <Box sx={{ pt: 3 }}>{children}</Box> : null;
 }
 
 export default function FavoritesModal({
@@ -27,6 +31,7 @@ export default function FavoritesModal({
   favorites,
   onUpdateNote,
   onDeleteFavorite,
+  onNavigateToFavorite,
 }) {
   const [tabIndex, setTabIndex] = useState(0);
   const [expandedItems, setExpandedItems] = useState({});
@@ -62,143 +67,411 @@ export default function FavoritesModal({
     if (onDeleteFavorite) onDeleteFavorite(id);
   };
 
-  const renderFavoriteItem = ({ id, title, text, note }) => {
+  const handleItemClick = (item) => {
+    if (onNavigateToFavorite) {
+      onNavigateToFavorite(item);
+      onClose();
+    }
+  };
+
+  const renderFavoriteItem = (item) => {
+    const { id, text, note, type, englishText } = item;
     const isExpanded = expandedItems[id];
     const isEditing = editingNotes[id];
-    const isLongText = text.length > 200;
+
+    // Get the appropriate text based on item type
+    const itemText = type === "hadith" ? englishText : text;
+    const isLongText = itemText && itemText.length > 200;
     const displayText =
-      isExpanded || !isLongText ? text : text.slice(0, 200) + "…";
+      isExpanded || !isLongText ? itemText : itemText?.slice(0, 200) + "…";
+
+    // Create title based on type
+    let title = "";
+    let surahName = "";
+    if (type === "ayah") {
+      // Get surah name from constants or use a simple mapping
+      const surahNames = {
+        1: "Al-Fatihah",
+        2: "Al-Baqarah",
+        3: "Ali 'Imran",
+        4: "An-Nisa",
+        5: "Al-Ma'idah",
+        6: "Al-An'am",
+        7: "Al-A'raf",
+        8: "Al-Anfal",
+        9: "At-Tawbah",
+        10: "Yunus",
+        11: "Hud",
+        12: "Yusuf",
+        13: "Ar-Ra'd",
+        14: "Ibrahim",
+        15: "Al-Hijr",
+        16: "An-Nahl",
+        17: "Al-Isra",
+        18: "Al-Kahf",
+        19: "Maryam",
+        20: "Taha",
+        21: "Al-Anbya",
+        22: "Al-Hajj",
+        23: "Al-Mu'minun",
+        24: "An-Nur",
+        25: "Al-Furqan",
+        26: "Ash-Shu'ara",
+        27: "An-Naml",
+        28: "Al-Qasas",
+        29: "Al-'Ankabut",
+        30: "Ar-Rum",
+        31: "Luqman",
+        32: "As-Sajdah",
+        33: "Al-Ahzab",
+        34: "Saba",
+        35: "Fatir",
+        36: "Ya-Sin",
+        37: "As-Saffat",
+        38: "Sad",
+        39: "Az-Zumar",
+        40: "Ghafir",
+        41: "Fussilat",
+        42: "Ash-Shuraa",
+        43: "Az-Zukhruf",
+        44: "Ad-Dukhan",
+        45: "Al-Jathiyah",
+        46: "Al-Ahqaf",
+        47: "Muhammad",
+        48: "Al-Fath",
+        49: "Al-Hujurat",
+        50: "Qaf",
+        51: "Adh-Dhariyat",
+        52: "At-Tur",
+        53: "An-Najm",
+        54: "Al-Qamar",
+        55: "Ar-Rahman",
+        56: "Al-Waqi'ah",
+        57: "Al-Hadid",
+        58: "Al-Mujadila",
+        59: "Al-Hashr",
+        60: "Al-Mumtahanah",
+        61: "As-Saff",
+        62: "Al-Jumu'ah",
+        63: "Al-Munafiqun",
+        64: "At-Taghabun",
+        65: "At-Talaq",
+        66: "At-Tahrim",
+        67: "Al-Mulk",
+        68: "Al-Qalam",
+        69: "Al-Haqqah",
+        70: "Al-Ma'arij",
+        71: "Nuh",
+        72: "Al-Jinn",
+        73: "Al-Muzzammil",
+        74: "Al-Muddaththir",
+        75: "Al-Qiyamah",
+        76: "Al-Insan",
+        77: "Al-Mursalat",
+        78: "An-Naba",
+        79: "An-Nazi'at",
+        80: "'Abasa",
+        81: "At-Takwir",
+        82: "Al-Infitar",
+        83: "Al-Mutaffifin",
+        84: "Al-Inshiqaq",
+        85: "Al-Buruj",
+        86: "At-Tariq",
+        87: "Al-A'la",
+        88: "Al-Ghashiyah",
+        89: "Al-Fajr",
+        90: "Al-Balad",
+        91: "Ash-Shams",
+        92: "Al-Layl",
+        93: "Ad-Duhaa",
+        94: "Ash-Sharh",
+        95: "At-Tin",
+        96: "Al-'Alaq",
+        97: "Al-Qadr",
+        98: "Al-Bayyinah",
+        99: "Az-Zalzalah",
+        100: "Al-'Adiyat",
+        101: "Al-Qari'ah",
+        102: "At-Takathur",
+        103: "Al-'Asr",
+        104: "Al-Humazah",
+        105: "Al-Fil",
+        106: "Quraysh",
+        107: "Al-Ma'un",
+        108: "Al-Kawthar",
+        109: "Al-Kafirun",
+        110: "An-Nasr",
+        111: "Al-Masad",
+        112: "Al-Ikhlas",
+        113: "Al-Falaq",
+        114: "An-Nas",
+      };
+      surahName = surahNames[item.surahNumber] || `Surah ${item.surahNumber}`;
+      title = `Surah ${item.surahNumber}: ${surahName}, Ayah ${item.ayahNumber}`;
+    } else {
+      // Use bookDisplayName for display, fallback to book if not available
+      const displayName = item.bookDisplayName || item.book;
+      title = `${displayName}, Hadith ${item.hadithNumber}`;
+    }
 
     return (
-      <Box key={id} sx={{ mb: 3 }}>
+      <Paper
+        key={id}
+        elevation={1}
+        sx={{
+          p: 2,
+          mb: 2,
+          borderRadius: 2,
+          cursor: "pointer",
+          transition: "all 0.3s ease",
+          border: "1px solid transparent",
+          "&:hover": {
+            elevation: 4,
+            transform: "translateY(-3px)",
+            backgroundColor: "rgba(25, 118, 210, 0.04)",
+            borderColor: "rgba(25, 118, 210, 0.2)",
+            boxShadow: "0 8px 25px rgba(25, 118, 210, 0.15)",
+          },
+        }}
+        onClick={() => handleItemClick(item)}
+      >
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography fontWeight="bold">{title}</Typography>
-          <IconButton onClick={() => handleDelete(id)} size="small">
-            <DeleteIcon fontSize="small" />
-          </IconButton>
+          <Typography variant="subtitle2" fontWeight="600">
+            {title}
+          </Typography>
+          <Box onClick={(e) => e.stopPropagation()}>
+            <IconButton onClick={() => handleDelete(id)} size="small">
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Box>
         </Box>
 
-        <Typography sx={{ fontStyle: "italic", mt: 1 }}>
+        <Typography
+          sx={{
+            fontStyle: "italic",
+            mt: 1,
+            fontSize: "0.9rem",
+            color: "text.secondary",
+          }}
+        >
           {displayText}
         </Typography>
 
         {isLongText && (
-          <IconButton onClick={() => toggleExpand(id)} size="small">
-            {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-          </IconButton>
+          <Box onClick={(e) => e.stopPropagation()}>
+            <IconButton onClick={() => toggleExpand(id)} size="small">
+              {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              <Typography variant="caption" sx={{ ml: 0.5 }}>
+                {isExpanded ? "Show Less" : "Show More"}
+              </Typography>
+            </IconButton>
+          </Box>
         )}
 
         <Box sx={{ mt: 1 }}>
           {isEditing ? (
-            <>
+            <Box onClick={(e) => e.stopPropagation()}>
               <TextField
-                label="Notes"
+                label="Personal Notes"
                 variant="outlined"
                 fullWidth
                 multiline
                 minRows={2}
+                maxRows={4}
                 value={noteDrafts[id] || ""}
                 onChange={(e) => handleNoteChange(id, e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleNoteSave(id);
+                  }
+                }}
+                sx={{ fontSize: "0.8rem" }}
               />
-              <Box textAlign="right" mt={1}>
-                <Tooltip title="Save">
-                  <IconButton onClick={() => handleNoteSave(id)} size="small">
-                    <SaveIcon />
-                  </IconButton>
-                </Tooltip>
+              <Box display="flex" justifyContent="flex-end" gap={1} mt={1}>
+                <IconButton
+                  onClick={() => toggleEdit(id, note)}
+                  size="small"
+                  sx={{ color: "text.secondary" }}
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  onClick={() => handleNoteSave(id)}
+                  size="small"
+                  sx={{ color: "text.secondary" }}
+                >
+                  <SaveIcon fontSize="small" />
+                </IconButton>
               </Box>
-            </>
+            </Box>
           ) : (
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems="flex-start"
+              sx={{
+                bgcolor: note ? "rgba(76, 175, 80, 0.04)" : "rgba(0,0,0,0.02)",
+                borderRadius: 1,
+                p: 1,
+                border: note
+                  ? "1px solid rgba(76, 175, 80, 0.2)"
+                  : "1px solid rgba(0,0,0,0.04)",
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: "0.8rem",
+                  color: note ? "text.primary" : "text.secondary",
+                  fontStyle: note ? "normal" : "italic",
+                  whiteSpace: "pre-line",
+                  flex: 1,
+                }}
+              >
+                {note || "No personal notes added yet."}
+              </Typography>
+              <IconButton
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleEdit(id, note);
+                }}
+                size="small"
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          )}
+        </Box>
+      </Paper>
+    );
+  };
+
+  const EmptyState = ({ type }) => (
+    <Box
+      textAlign="center"
+      py={4}
+      sx={{
+        bgcolor: "rgba(0,0,0,0.02)",
+        borderRadius: 2,
+        border: "2px dashed rgba(0,0,0,0.1)",
+      }}
+    >
+      <Typography variant="h6" sx={{ mb: 1, color: "text.secondary" }}>
+        No {type === "ayah" ? "Ayahs" : "Hadiths"} Saved
+      </Typography>
+      <Typography variant="body2" color="text.secondary">
+        Start adding {type === "ayah" ? "verses" : "hadiths"} to your favorites
+        by clicking the heart icon
+      </Typography>
+    </Box>
+  );
+
+  return (
+    <Modal open={open} onClose={onClose} closeAfterTransition>
+      <Slide direction="right" in={open} mountOnEnter unmountOnExit>
+        <Box
+          sx={{
+            width: 480, // Same width as settings modal
+            height: "100vh",
+            overflowY: "auto",
+            bgcolor: "rgba(255, 255, 255, 0.98)",
+            backdropFilter: "blur(20px)",
+            borderRadius: "0 20px 20px 0",
+            boxShadow: "0 25px 50px rgba(0, 0, 0, 0.15)",
+            position: "fixed",
+            top: 0,
+            left: 0,
+            border: "1px solid rgba(255, 255, 255, 0.2)",
+          }}
+        >
+          {/* Header */}
+          <Box
+            sx={{
+              position: "sticky",
+              top: 0,
+              zIndex: 10,
+              bgcolor: "rgba(255, 255, 255, 0.95)",
+              backdropFilter: "blur(20px)",
+              borderBottom: "1px solid rgba(0, 0, 0, 0.06)",
+              p: 3,
+            }}
+          >
             <Box
               display="flex"
               justifyContent="space-between"
               alignItems="center"
             >
-              <Typography
+              <Box>
+                <Typography
+                  variant="h5"
+                  sx={{ fontWeight: 700, color: "text.primary" }}
+                >
+                  ❤️ Favorites
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mt: 0.5 }}
+                >
+                  Your saved verses and hadiths
+                </Typography>
+              </Box>
+              <IconButton
+                onClick={onClose}
                 sx={{
-                  fontSize: "0.9rem",
-                  color: "text.secondary",
-                  whiteSpace: "pre-line",
+                  bgcolor: "rgba(0, 0, 0, 0.04)",
+                  "&:hover": { bgcolor: "rgba(0, 0, 0, 0.08)" },
                 }}
               >
-                {note || <i>No notes added.</i>}
-              </Typography>
-              <Tooltip title="Edit">
-                <IconButton onClick={() => toggleEdit(id, note)} size="small">
-                  <EditIcon />
-                </IconButton>
-              </Tooltip>
+                <CloseIcon />
+              </IconButton>
             </Box>
-          )}
+
+            <Tabs
+              value={tabIndex}
+              onChange={handleChangeTab}
+              sx={{
+                mt: 3,
+                "& .MuiTab-root": {
+                  minHeight: 48,
+                  textTransform: "none",
+                  fontWeight: 600,
+                  fontSize: "0.875rem",
+                  "&.Mui-selected": {
+                    color: "primary.main",
+                  },
+                },
+                "& .MuiTabs-indicator": {
+                  height: 3,
+                  borderRadius: "3px 3px 0 0",
+                },
+              }}
+            >
+              <Tab label={`Ayahs (${ayahFavorites.length})`} />
+              <Tab label={`Hadiths (${hadithFavorites.length})`} />
+            </Tabs>
+          </Box>
+
+          {/* Content */}
+          <Box sx={{ p: 3 }}>
+            <TabPanel value={tabIndex} index={0}>
+              {ayahFavorites.length === 0 ? (
+                <EmptyState type="ayah" />
+              ) : (
+                ayahFavorites.map((item) => renderFavoriteItem(item))
+              )}
+            </TabPanel>
+
+            <TabPanel value={tabIndex} index={1}>
+              {hadithFavorites.length === 0 ? (
+                <EmptyState type="hadith" />
+              ) : (
+                hadithFavorites.map((item) => renderFavoriteItem(item))
+              )}
+            </TabPanel>
+          </Box>
         </Box>
-
-        <Divider sx={{ mt: 2 }} />
-      </Box>
-    );
-  };
-
-  return (
-    <Modal open={open} onClose={onClose}>
-      <Box
-        sx={{
-          position: "fixed",
-          bottom: 70, // adjust based on your bottom-left buttons' height
-          left: 0,
-          bgcolor: "background.paper",
-          boxShadow: 24,
-          borderRadius: 2,
-          width: {
-            xs: "90vw",
-            sm: 400,
-          },
-          maxHeight: "70vh",
-          overflowY: "auto",
-          p: 3,
-          zIndex: 1300,
-        }}
-      >
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="h6">Favorites</Typography>
-          <IconButton onClick={onClose}>
-            <CloseIcon />
-          </IconButton>
-        </Box>
-
-        <Tabs value={tabIndex} onChange={handleChangeTab} sx={{ mt: 2 }}>
-          <Tab label={`Ayahs (${ayahFavorites.length})`} />
-          <Tab label={`Hadiths (${hadithFavorites.length})`} />
-        </Tabs>
-
-        <TabPanel value={tabIndex} index={0}>
-          {ayahFavorites.length === 0 ? (
-            <Typography>No favorite Ayahs yet.</Typography>
-          ) : (
-            ayahFavorites.map((item) =>
-              renderFavoriteItem({
-                id: item.id,
-                title: `Surah ${item.surahNumber} : Ayah ${item.ayahNumber}`,
-                text: item.text,
-                note: item.note,
-              })
-            )
-          )}
-        </TabPanel>
-
-        <TabPanel value={tabIndex} index={1}>
-          {hadithFavorites.length === 0 ? (
-            <Typography>No favorite Hadiths yet.</Typography>
-          ) : (
-            hadithFavorites.map((item) =>
-              renderFavoriteItem({
-                id: item.id,
-                title: `${item.book} : Hadith ${item.hadithNumber}`,
-                text: item.englishText,
-                note: item.note,
-              })
-            )
-          )}
-        </TabPanel>
-      </Box>
+      </Slide>
     </Modal>
   );
 }

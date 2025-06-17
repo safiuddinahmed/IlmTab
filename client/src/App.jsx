@@ -410,7 +410,8 @@ function App() {
       newFavorite = {
         id,
         type: "hadith",
-        book: item.book,
+        book: item.bookSlug, // Use bookSlug for API calls
+        bookDisplayName: item.book, // Store display name separately
         hadithNumber: item.number,
         englishText: item.text.english || "",
         note: "",
@@ -434,6 +435,18 @@ function App() {
 
   const handleDeleteFavorite = (id) => {
     dispatch(removeFavorite(id));
+  };
+
+  const handleNavigateToFavorite = (favoriteItem) => {
+    if (favoriteItem.type === "ayah") {
+      // Navigate to the specific ayah
+      setViewMode("ayah");
+      fetchAyah(favoriteItem.surahNumber, favoriteItem.ayahNumber);
+    } else if (favoriteItem.type === "hadith") {
+      // Navigate to the specific hadith
+      setViewMode("hadith");
+      fetchHadith(favoriteItem.book, favoriteItem.hadithNumber);
+    }
   };
 
   const backgroundStyle = {
@@ -546,6 +559,7 @@ function App() {
                 onPrev={handlePrevAyah}
                 onToggleContinuous={() => setContinuous((prev) => !prev)}
                 isContinuous={continuous}
+                onFavorite={handleFavorite}
               />
             )}
 
@@ -556,6 +570,7 @@ function App() {
                 onPrev={handlePrevHadith}
                 onToggleContinuous={() => setHadithContinuous((prev) => !prev)}
                 isContinuous={hadithContinuous}
+                onFavorite={handleFavorite}
               />
             )}
 
@@ -610,6 +625,7 @@ function App() {
             favorites={favorites}
             onUpdateNote={handleUpdateNote}
             onDeleteFavorite={handleDeleteFavorite}
+            onNavigateToFavorite={handleNavigateToFavorite}
           />
           <SettingsModal
             open={settingsOpen}

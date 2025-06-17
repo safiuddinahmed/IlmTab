@@ -53,7 +53,7 @@ const AudioPlayer = ({
   const favorites = useSelector((state) => state.favorites.items);
 
   // Compose a unique ID for this ayah favorite
-  const favoriteId = `ayah-${ayah.surah.number}-${ayah.number}`;
+  const favoriteId = `ayah-${ayah.surah.number}-${ayah.surah.ayahNumberInSurah}`;
 
   // Check if this ayah is favorited
   const isFavorited = favorites.some((fav) => fav.id === favoriteId);
@@ -67,15 +67,14 @@ const AudioPlayer = ({
         id: favoriteId,
         type: "ayah",
         surahNumber: ayah.surah.number,
-        ayahNumber: ayah.number,
+        ayahNumber: ayah.surah.ayahNumberInSurah,
         text: ayah.text,
         audio: src,
         note: "",
       };
       dispatch(addFavorite(favoriteObject));
     }
-
-    if (onFavorite) onFavorite();
+    // Remove the onFavorite callback call to prevent duplicates
   };
 
   useEffect(() => {

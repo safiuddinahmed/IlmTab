@@ -1,7 +1,7 @@
 {
   "name": "ilmtab-server",
   "version": "0.1.0",
-  "description": "Backend Express server for IlmTab - provides Islamic content APIs for Quran, Hadith, and Tafsir",
+  "description": "Backend Express server for IlmTab - provides comprehensive Islamic content APIs for Quran verses, authentic Hadith collections, Tafsir commentary, and audio recitations",
   "type": "module",
   "scripts": {
     "start": "node index.js",
