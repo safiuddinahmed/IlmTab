@@ -1,4 +1,10 @@
-# IlmTab Browser Extension Installation Guide
+<div align="center">
+  <img src="client/public/IlmTab-logo/vector/IlmTabLogo.svg" alt="IlmTab Logo" width="100" height="100">
+  
+  # IlmTab Browser Extension Installation Guide
+  
+  *Transform your new tab into a spiritual sanctuary*
+</div>
 
 ## What is IlmTab?
 

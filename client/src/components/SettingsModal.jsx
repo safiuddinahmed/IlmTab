@@ -519,10 +519,34 @@ export default function SettingsModal({ open, onClose }) {
               p: 3,
             }}
           >
+            {/* Logo Section - Centered and Large */}
+            <Box
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              sx={{ mb: 3 }}
+            >
+              <Box
+                component="img"
+                src="/IlmTab-logo/vector/default.svg"
+                alt="IlmTab Logo"
+                sx={{
+                  width: 200,
+                  height: 200,
+                  mb: 2,
+                  "&:hover": {
+                    transform: "scale(1.05)",
+                  },
+                }}
+              />
+            </Box>
+
+            {/* Settings Title - Left Side with Icon */}
             <Box
               display="flex"
               justifyContent="space-between"
               alignItems="center"
+              sx={{ mb: 3 }}
             >
               <Box>
                 <Typography

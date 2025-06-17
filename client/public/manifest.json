@@ -10,7 +10,8 @@
     "storage"
   ],
   "icons": {
-    "48": "icon48.png",
-    "128": "icon128.png"
+    "16": "IlmTab-logo/vector/IlmTabLogo.svg",
+    "48": "IlmTab-logo/vector/IlmTabLogo.svg",
+    "128": "IlmTab-logo/vector/IlmTabLogo.svg"
   }
 }

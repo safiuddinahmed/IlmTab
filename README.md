@@ -1,4 +1,10 @@
-# 🌙 IlmTab - Your Daily Islamic Knowledge Companion
+<div align="center">
+  <img src="client/public/IlmTab-logo/vector/IlmTabLogo.svg" alt="IlmTab Logo" width="120" height="120">
+  
+  # 🌙 IlmTab - Your Daily Islamic Knowledge Companion
+  
+  *Transform your new tab into a spiritual sanctuary*
+</div>
 
 IlmTab is a transformative browser extension that turns your new tab into a spiritual sanctuary. Every time you open a new tab, you're greeted with daily Quran verses, authentic Hadith, and Islamic productivity tools, keeping you connected to your faith throughout your browsing experience.
 
