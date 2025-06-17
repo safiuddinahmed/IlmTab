@@ -17,6 +17,9 @@ import HadithCard from "./components/HadithCard";
 import Greeting from "./components/Greeting";
 import ToDoList from "./components/ToDoList";
 import DateTimeWeather from "./components/DateTimeWeather";
+import AyahCardSkeleton from "./components/skeletons/AyahCardSkeleton";
+import HadithCardSkeleton from "./components/skeletons/HadithCardSkeleton";
+import DateTimeWeatherSkeleton from "./components/skeletons/DateTimeWeatherSkeleton";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import FavoriteIcon from "@mui/icons-material/Favorite";
@@ -486,16 +489,6 @@ function App() {
             py: 4,
           }}
         >
-          {(loading || hadithLoading) && (
-            <Box
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              my={4}
-            >
-              <CircularProgress />
-            </Box>
-          )}
           {/* Enhanced Error Display */}
           {error && (
             <Box
@@ -560,30 +553,51 @@ function App() {
           </Box>
 
           <Box sx={{ width: "100%", maxWidth: "900px", mx: "auto" }}>
-            {viewMode === "ayah" && ayah && (
-              <AyahCard
-                ayah={ayah}
-                onNext={handleNextAyah}
-                onPrev={handlePrevAyah}
-                onToggleContinuous={() => setContinuous((prev) => !prev)}
-                isContinuous={continuous}
-                onFavorite={handleFavorite}
-              />
+            {/* Ayah Content or Skeleton */}
+            {viewMode === "ayah" && (
+              <>
+                {loading ? (
+                  <AyahCardSkeleton />
+                ) : ayah ? (
+                  <AyahCard
+                    ayah={ayah}
+                    onNext={handleNextAyah}
+                    onPrev={handlePrevAyah}
+                    onToggleContinuous={() => setContinuous((prev) => !prev)}
+                    isContinuous={continuous}
+                    onFavorite={handleFavorite}
+                  />
+                ) : null}
+              </>
             )}
 
-            {viewMode === "hadith" && hadith && (
-              <HadithCard
-                hadith={hadith}
-                onNext={handleNextHadith}
-                onPrev={handlePrevHadith}
-                onToggleContinuous={() => setHadithContinuous((prev) => !prev)}
-                isContinuous={hadithContinuous}
-                onFavorite={handleFavorite}
-              />
+            {/* Hadith Content or Skeleton */}
+            {viewMode === "hadith" && (
+              <>
+                {hadithLoading ? (
+                  <HadithCardSkeleton />
+                ) : hadith ? (
+                  <HadithCard
+                    hadith={hadith}
+                    onNext={handleNextHadith}
+                    onPrev={handlePrevHadith}
+                    onToggleContinuous={() =>
+                      setHadithContinuous((prev) => !prev)
+                    }
+                    isContinuous={hadithContinuous}
+                    onFavorite={handleFavorite}
+                  />
+                ) : null}
+              </>
             )}
 
+            {/* Weather Content or Skeleton */}
             {weatherEnabled && <DateTimeWeather />}
+
+            {/* Greeting - always show when enabled */}
             {greetingsEnabled && <Greeting name={greetingsName} />}
+
+            {/* Tasks - always show when enabled */}
             {tasksEnabled && <ToDoList />}
           </Box>
         </Box>

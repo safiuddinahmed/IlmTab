@@ -1,7 +1,7 @@
 // src/redux/settingsSlice.js
 import { createSlice } from "@reduxjs/toolkit";
 
-const SETTINGS_VERSION = "1.2.0"; // Increment this when adding new settings
+const SETTINGS_VERSION = "1.3.0"; // Increment this when adding new settings
 
 const loadSettingsFromLocalStorage = () => {
   try {
@@ -48,6 +48,10 @@ const migrateSettings = (oldSettings) => {
     // Background settings will use defaults for new installations
     if (oldSettings.background) {
       migratedSettings.background = { ...migratedSettings.background, ...oldSettings.background };
+    }
+    // Search settings - new in v1.3.0, will use defaults for existing users
+    if (oldSettings.search) {
+      migratedSettings.search = { ...migratedSettings.search, ...oldSettings.search };
     }
   }
   
@@ -113,6 +117,9 @@ const defaultState = {
       englishName: "Mishary Rashid Alafasy",
     },
   },
+  search: {
+    translationEdition: "en.sahih", // Default search translation
+  },
   weather: {
     enabled: true,
     location: {
@@ -177,6 +184,10 @@ const settingsSlice = createSlice({
   },
   setAudioEdition(state, action) {
     state.ayah.audioEdition = action.payload;
+    saveSettingsToLocalStorage(state);
+  },
+  setSearchTranslationEdition(state, action) {
+    state.search.translationEdition = action.payload;
     saveSettingsToLocalStorage(state);
   },
 
@@ -287,6 +298,7 @@ export const {
   setTextEditionLanguage,
   setTextEditionIdentifier,
   setAudioEdition,
+  setSearchTranslationEdition,
   setWeatherEnabled,
   setLocation,
   setCustomLocationName,

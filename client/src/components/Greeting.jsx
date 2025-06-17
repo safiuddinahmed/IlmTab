@@ -99,7 +99,7 @@ const Greeting = ({ name = "Friend" }) => {
         <Typography
           variant="h4"
           sx={{
-            fontWeight: 500,
+            fontWeight: 700,
             color: "white",
             fontFamily: "'Inter', 'Segoe UI', sans-serif",
             userSelect: "none",

@@ -32,6 +32,8 @@ import {
 } from "@mui/icons-material";
 import { useSelector, useDispatch } from "react-redux";
 import { addFavorite, removeFavorite } from "../redux/favoritesSlice";
+import { setSearchTranslationEdition } from "../redux/settingsSlice";
+import QuranSearchSkeleton from "./skeletons/QuranSearchSkeleton";
 import axios from "axios";
 
 const QuranSearch = ({ onSelectAyah, onClose }) => {
@@ -45,9 +47,9 @@ const QuranSearch = ({ onSelectAyah, onClose }) => {
 
   const dispatch = useDispatch();
 
-  // Get current text edition from Redux (limit to English for now)
-  const textEditionIdentifier = useSelector(
-    (state) => state.settings.ayah.textEdition.identifier
+  // Get search translation edition from Redux
+  const searchTranslationEdition = useSelector(
+    (state) => state.settings.search.translationEdition
   );
 
   // Get favorites from Redux
@@ -61,11 +63,8 @@ const QuranSearch = ({ onSelectAyah, onClose }) => {
     { identifier: "en.sahih", name: "Saheeh International" },
   ];
 
-  // Current selected edition (can be changed via dropdown)
-  const [selectedEdition, setSelectedEdition] = useState(
-    availableEditions.find((ed) => ed.identifier === textEditionIdentifier)
-      ?.identifier || "en.sahih"
-  );
+  // Current selected edition from Redux (persisted)
+  const selectedEdition = searchTranslationEdition;
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -104,9 +103,19 @@ const QuranSearch = ({ onSelectAyah, onClose }) => {
       }
     } catch (err) {
       console.error("Search error:", err);
-      setError("Failed to search. Please try again.");
-      setSearchResults([]);
-      setResultCount(0);
+
+      // Check if it's a 404 (no results found) vs actual error
+      if (err.response && err.response.status === 404) {
+        // 404 means no results found, not an error
+        setSearchResults([]);
+        setResultCount(0);
+        setError(null);
+      } else {
+        // Actual error occurred
+        setError("Failed to search. Please try again.");
+        setSearchResults([]);
+        setResultCount(0);
+      }
     } finally {
       setLoading(false);
     }
@@ -253,7 +262,9 @@ const QuranSearch = ({ onSelectAyah, onClose }) => {
               <Select
                 value={selectedEdition}
                 label="Translation"
-                onChange={(e) => setSelectedEdition(e.target.value)}
+                onChange={(e) =>
+                  dispatch(setSearchTranslationEdition(e.target.value))
+                }
                 sx={{ borderRadius: 2 }}
                 MenuProps={{
                   PaperProps: {
@@ -294,8 +305,10 @@ const QuranSearch = ({ onSelectAyah, onClose }) => {
             </Box>
           )}
 
-          {/* Search Results */}
-          {searchResults.length > 0 && (
+          {/* Search Results or Skeleton */}
+          {loading && hasSearched ? (
+            <QuranSearchSkeleton />
+          ) : searchResults.length > 0 ? (
             <Box sx={{ maxHeight: "50vh", overflow: "auto" }}>
               <Divider />
               <List sx={{ p: 0 }}>
@@ -384,7 +397,7 @@ const QuranSearch = ({ onSelectAyah, onClose }) => {
                 ))}
               </List>
             </Box>
-          )}
+          ) : null}
 
           {/* No Results */}
           {!loading &&
