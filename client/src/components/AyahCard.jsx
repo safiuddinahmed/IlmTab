@@ -10,6 +10,7 @@ import {
   keyframes,
 } from "@mui/material";
 import AudioPlayer from "./AudioPlayer";
+import { transliteratedSurahNames } from "../constants/surahNames";
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px);}
@@ -71,7 +72,7 @@ const AyahCard = ({
               marginLeft: 1,
             }}
           >
-            ({ayah.surah.name})
+            ({ayah.surah.name} • {transliteratedSurahNames[ayah.surah.number]})
           </Typography>
           <Typography variant="body2" sx={{ mt: 0.5, color: "#eee" }}>
             Ayah {ayah.surah.ayahNumberInSurah} of {ayah.surah.numberOfAyahs}
