@@ -181,6 +181,7 @@ const QuranSearch = ({ onSelectAyah, onClose }) => {
   return (
     <Modal open={true} onClose={onClose} closeAfterTransition>
       <Box
+        className="modal-enter"
         sx={{
           position: "fixed",
           top: 20,
@@ -316,6 +317,7 @@ const QuranSearch = ({ onSelectAyah, onClose }) => {
                   <ListItem
                     key={result.verseKey}
                     button
+                    className="stagger-item smooth-hover"
                     onClick={() => handleSelectResult(result)}
                     sx={{
                       borderBottom:

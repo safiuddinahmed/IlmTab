@@ -11,6 +11,7 @@ import {
   Tooltip,
   Paper,
   Slide,
+  Collapse,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -83,8 +84,6 @@ export default function FavoritesModal({
     // Get the appropriate text based on item type
     const itemText = type === "hadith" ? englishText : text;
     const isLongText = itemText && itemText.length > 200;
-    const displayText =
-      isExpanded || !isLongText ? itemText : itemText?.slice(0, 200) + "…";
 
     // Create title based on type
     let title = "";
@@ -135,27 +134,55 @@ export default function FavoritesModal({
           </Box>
         </Box>
 
-        <Typography
-          sx={{
-            fontStyle: "italic",
-            mt: 1,
-            fontSize: "0.9rem",
-            color: "text.secondary",
-          }}
-        >
-          {displayText}
-        </Typography>
+        <Box>
+          {/* Always show truncated text */}
+          <Typography
+            sx={{
+              fontStyle: "italic",
+              mt: 1,
+              fontSize: "0.9rem",
+              color: "text.secondary",
+            }}
+          >
+            {isLongText ? itemText?.slice(0, 200) + "…" : itemText}
+          </Typography>
 
-        {isLongText && (
-          <Box onClick={(e) => e.stopPropagation()}>
-            <IconButton onClick={() => toggleExpand(id)} size="small">
-              {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-              <Typography variant="caption" sx={{ ml: 0.5 }}>
-                {isExpanded ? "Show Less" : "Show More"}
-              </Typography>
-            </IconButton>
-          </Box>
-        )}
+          {/* Collapsible additional text for long content */}
+          {isLongText && (
+            <Collapse in={isExpanded} timeout={300}>
+              <Box className="expand-enter">
+                <Typography
+                  sx={{
+                    fontStyle: "italic",
+                    fontSize: "0.9rem",
+                    color: "text.secondary",
+                    mt: 1,
+                  }}
+                  className="list-item-enter"
+                >
+                  {itemText?.slice(200)}
+                </Typography>
+              </Box>
+            </Collapse>
+          )}
+
+          {isLongText && (
+            <Box onClick={(e) => e.stopPropagation()}>
+              <IconButton
+                onClick={() => toggleExpand(id)}
+                size="small"
+                className="btn-smooth"
+              >
+                <Box className="icon-smooth">
+                  {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                </Box>
+                <Typography variant="caption" sx={{ ml: 0.5 }}>
+                  {isExpanded ? "Show Less" : "Show More"}
+                </Typography>
+              </IconButton>
+            </Box>
+          )}
+        </Box>
 
         <Box sx={{ mt: 1 }}>
           {isEditing ? (

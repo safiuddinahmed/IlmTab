@@ -9,6 +9,7 @@ import {
   TextField,
   Checkbox,
   Tooltip,
+  Collapse,
 } from "@mui/material";
 import {
   ExpandMore,
@@ -132,7 +133,7 @@ const ToDoList = () => {
       </Box>
 
       {/* Expanded panel content */}
-      {expanded && (
+      <Collapse in={expanded} timeout={300}>
         <Box
           sx={{
             mt: 1,
@@ -141,9 +142,9 @@ const ToDoList = () => {
             p: 2,
             borderRadius: 2,
             boxShadow: "0 6px 20px rgba(0, 0, 0, 0.1)",
-            animation: "fadeInUp 1s ease forwards",
             color: "#111827",
           }}
+          className="expand-enter"
         >
           {/* Add task input */}
           <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
@@ -164,7 +165,8 @@ const ToDoList = () => {
 
           {/* Tasks list */}
           <List dense>
-            {visibleTasks.map(({ id, text, done }) => (
+            {/* Always show first 3 tasks */}
+            {tasks.slice(0, 3).map(({ id, text, done }) => (
               <ListItem
                 key={id}
                 sx={{
@@ -173,6 +175,7 @@ const ToDoList = () => {
                   display: "flex",
                   alignItems: "center",
                 }}
+                className="list-item-enter"
               >
                 <Checkbox
                   checked={done}
@@ -223,6 +226,72 @@ const ToDoList = () => {
                 </IconButton>
               </ListItem>
             ))}
+
+            {/* Collapsible additional tasks */}
+            <Collapse in={showAll} timeout={300}>
+              <Box className="expand-enter">
+                {tasks.slice(3).map(({ id, text, done }) => (
+                  <ListItem
+                    key={id}
+                    sx={{
+                      px: 0.5,
+                      py: 0,
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                    className="list-item-enter"
+                  >
+                    <Checkbox
+                      checked={done}
+                      onChange={() => toggleDone(id)}
+                      sx={{ mr: 1 }}
+                    />
+                    {editId === id ? (
+                      <TextField
+                        fullWidth
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            saveEdit();
+                          } else if (e.key === "Escape") {
+                            setEditId(null);
+                            setEditText("");
+                          }
+                        }}
+                        onBlur={saveEdit}
+                        size="small"
+                        autoFocus
+                      />
+                    ) : (
+                      <ListItemText
+                        primary={text}
+                        sx={{
+                          textDecoration: done ? "line-through" : "none",
+                          color: done ? "gray" : "black",
+                        }}
+                      />
+                    )}
+                    {editId === id ? (
+                      <IconButton onClick={saveEdit} size="small">
+                        <Save fontSize="small" />
+                      </IconButton>
+                    ) : (
+                      <IconButton
+                        onClick={() => startEditing(id, text)}
+                        size="small"
+                      >
+                        <Edit fontSize="small" />
+                      </IconButton>
+                    )}
+                    <IconButton onClick={() => deleteTask(id)} size="small">
+                      <Delete fontSize="small" />
+                    </IconButton>
+                  </ListItem>
+                ))}
+              </Box>
+            </Collapse>
           </List>
 
           {/* Show more / less toggle if tasks > 3 */}
@@ -231,15 +300,21 @@ const ToDoList = () => {
               <IconButton
                 onClick={() => setShowAll((prev) => !prev)}
                 size="small"
+                className="btn-smooth"
                 sx={{ color: "black" }}
                 aria-label={showAll ? "Show less tasks" : "Show more tasks"}
               >
-                {showAll ? <ExpandLess /> : <ExpandMore />}
+                <Box className="icon-smooth">
+                  {showAll ? <ExpandLess /> : <ExpandMore />}
+                </Box>
+                <Typography variant="caption" sx={{ ml: 0.5 }}>
+                  {showAll ? "Show Less" : "Show More"}
+                </Typography>
               </IconButton>
             </Box>
           )}
         </Box>
-      )}
+      </Collapse>
     </Box>
   );
 };

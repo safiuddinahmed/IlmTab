@@ -12,6 +12,7 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import { useSelector } from "react-redux";
 import { tafsirsByLanguage } from "../constants/tafsirsByLanguage";
+import TafsirModalSkeleton from "./skeletons/TafsirModalSkeleton";
 
 const TafsirModal = ({ open, onClose, surah, ayah }) => {
   const tafsirId = useSelector((state) => state.settings.ayah.tafsirId) || 169;
@@ -47,7 +48,15 @@ const TafsirModal = ({ open, onClose, surah, ayah }) => {
   }, [open, surah, ayah, tafsirId]);
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{
+        className: "modal-enter",
+      }}
+    >
       <DialogTitle>
         Tafsir
         <IconButton
@@ -67,14 +76,18 @@ const TafsirModal = ({ open, onClose, surah, ayah }) => {
           </Typography>
         </Box>
 
-        {loading && <CircularProgress />}
-        {error && <Typography color="error">{error}</Typography>}
-        {tafsir && (
-          <div
-            dangerouslySetInnerHTML={{ __html: tafsir.tafsir }}
-            style={{ lineHeight: 1.6 }}
-          />
-        )}
+        {loading ? (
+          <TafsirModalSkeleton />
+        ) : error ? (
+          <Typography color="error">{error}</Typography>
+        ) : tafsir ? (
+          <div className="animate-fade-in">
+            <div
+              dangerouslySetInnerHTML={{ __html: tafsir.tafsir }}
+              style={{ lineHeight: 1.6 }}
+            />
+          </div>
+        ) : null}
       </DialogContent>
     </Dialog>
   );

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import store from "./store";
+import "./styles/animations.css";
 import { Provider, useSelector, useDispatch } from "react-redux";
 import {
   CssBaseline,
@@ -559,14 +560,16 @@ function App() {
                 {loading ? (
                   <AyahCardSkeleton />
                 ) : ayah ? (
-                  <AyahCard
-                    ayah={ayah}
-                    onNext={handleNextAyah}
-                    onPrev={handlePrevAyah}
-                    onToggleContinuous={() => setContinuous((prev) => !prev)}
-                    isContinuous={continuous}
-                    onFavorite={handleFavorite}
-                  />
+                  <div className="animate-fade-in">
+                    <AyahCard
+                      ayah={ayah}
+                      onNext={handleNextAyah}
+                      onPrev={handlePrevAyah}
+                      onToggleContinuous={() => setContinuous((prev) => !prev)}
+                      isContinuous={continuous}
+                      onFavorite={handleFavorite}
+                    />
+                  </div>
                 ) : null}
               </>
             )}
@@ -577,16 +580,18 @@ function App() {
                 {hadithLoading ? (
                   <HadithCardSkeleton />
                 ) : hadith ? (
-                  <HadithCard
-                    hadith={hadith}
-                    onNext={handleNextHadith}
-                    onPrev={handlePrevHadith}
-                    onToggleContinuous={() =>
-                      setHadithContinuous((prev) => !prev)
-                    }
-                    isContinuous={hadithContinuous}
-                    onFavorite={handleFavorite}
-                  />
+                  <div className="animate-fade-in">
+                    <HadithCard
+                      hadith={hadith}
+                      onNext={handleNextHadith}
+                      onPrev={handlePrevHadith}
+                      onToggleContinuous={() =>
+                        setHadithContinuous((prev) => !prev)
+                      }
+                      isContinuous={hadithContinuous}
+                      onFavorite={handleFavorite}
+                    />
+                  </div>
                 ) : null}
               </>
             )}
@@ -616,6 +621,7 @@ function App() {
           <Tooltip title="Favorites">
             <IconButton
               size="large"
+              className="btn-smooth"
               sx={{
                 backgroundColor: "#fff",
                 boxShadow: 2,
@@ -623,13 +629,14 @@ function App() {
               }}
               onClick={() => setModalOpen(true)}
             >
-              <FavoriteIcon color="error" />
+              <FavoriteIcon color="error" className="icon-smooth" />
             </IconButton>
           </Tooltip>
 
           <Tooltip title="Settings">
             <IconButton
               size="large"
+              className="btn-smooth"
               sx={{
                 backgroundColor: "#fff",
                 boxShadow: 2,
@@ -637,13 +644,14 @@ function App() {
               }}
               onClick={() => setSettingsOpen(true)}
             >
-              <SettingsIcon />
+              <SettingsIcon className="icon-smooth" />
             </IconButton>
           </Tooltip>
 
           <Tooltip title="Search Quran">
             <IconButton
               size="large"
+              className="btn-smooth"
               sx={{
                 backgroundColor: "#fff",
                 boxShadow: 2,
@@ -651,7 +659,7 @@ function App() {
               }}
               onClick={() => setSearchOpen(true)}
             >
-              <SearchIcon color="primary" />
+              <SearchIcon color="primary" className="icon-smooth" />
             </IconButton>
           </Tooltip>
 

@@ -1,0 +1,303 @@
+/* Performance-optimized animations for IlmTab */
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* GPU-accelerated fade-in animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Smooth fade-in for content replacing skeletons */
+@keyframes contentFadeIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Subtle pulse for loading states */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale3d(1, 1, 1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale3d(1.02, 1.02, 1);
+  }
+}
+
+/* Smooth skeleton shimmer effect */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+/* Gentle bounce for success states */
+@keyframes gentleBounce {
+  0%, 20%, 53%, 80%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  40%, 43% {
+    transform: translate3d(0, -4px, 0);
+  }
+  70% {
+    transform: translate3d(0, -2px, 0);
+  }
+  90% {
+    transform: translate3d(0, -1px, 0);
+  }
+}
+
+/* Smooth scale for interactive elements */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale3d(0.95, 0.95, 1);
+  }
+  to {
+    opacity: 1;
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+/* Utility classes for common animations */
+.animate-fade-in {
+  animation: contentFadeIn 0.3s ease-out forwards;
+  will-change: opacity, transform;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out forwards;
+  will-change: opacity, transform;
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    rgba(255, 255, 255, 0.3) 50%, 
+    rgba(255, 255, 255, 0.1) 100%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  will-change: background-position;
+}
+
+.animate-bounce {
+  animation: gentleBounce 0.6s ease-out;
+  will-change: transform;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out forwards;
+  will-change: opacity, transform;
+}
+
+/* Smooth transitions for interactive elements */
+.smooth-hover {
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  will-change: transform, box-shadow;
+}
+
+.smooth-hover:hover {
+  transform: translate3d(0, -2px, 0);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* Button hover effects */
+.btn-smooth {
+  transition: all 0.2s ease-out;
+  will-change: transform, background-color, box-shadow;
+}
+
+.btn-smooth:hover {
+  transform: translate3d(0, -1px, 0) scale3d(1.02, 1.02, 1);
+}
+
+.btn-smooth:active {
+  transform: translate3d(0, 0, 0) scale3d(0.98, 0.98, 1);
+  transition-duration: 0.1s;
+}
+
+/* Icon animations */
+.icon-smooth {
+  transition: transform 0.2s ease-out, color 0.2s ease-out;
+  will-change: transform, color;
+}
+
+.icon-smooth:hover {
+  transform: scale3d(1.1, 1.1, 1);
+}
+
+/* Card hover effects */
+.card-smooth {
+  transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+  will-change: transform, box-shadow;
+}
+
+.card-smooth:hover {
+  transform: translate3d(0, -4px, 0);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+}
+
+/* Modal entrance/exit */
+.modal-enter {
+  animation: scaleIn 0.2s ease-out forwards;
+}
+
+.modal-exit {
+  animation: scaleIn 0.15s ease-in reverse forwards;
+}
+
+/* Staggered list animations */
+.stagger-item {
+  opacity: 0;
+  transform: translate3d(0, 20px, 0);
+  animation: fadeInUp 0.4s ease-out forwards;
+  will-change: opacity, transform;
+}
+
+.stagger-item:nth-child(1) { animation-delay: 0ms; }
+.stagger-item:nth-child(2) { animation-delay: 50ms; }
+.stagger-item:nth-child(3) { animation-delay: 100ms; }
+.stagger-item:nth-child(4) { animation-delay: 150ms; }
+.stagger-item:nth-child(5) { animation-delay: 200ms; }
+.stagger-item:nth-child(6) { animation-delay: 250ms; }
+
+/* Loading spinner replacement */
+.loading-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.loading-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+  animation: pulse 1.4s ease-in-out infinite both;
+  will-change: opacity, transform;
+}
+
+.loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+.loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+.loading-dots span:nth-child(3) { animation-delay: 0s; }
+
+/* Smooth opacity transitions */
+.fade-transition {
+  transition: opacity 0.3s ease-out;
+  will-change: opacity;
+}
+
+/* Hardware acceleration for better performance */
+.gpu-accelerated {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Smooth expand/collapse animations */
+.expand-enter {
+  opacity: 0;
+  transform: translate3d(0, -10px, 0) scale3d(0.98, 0.98, 1);
+  animation: expandIn 0.3s ease-out forwards;
+  will-change: opacity, transform;
+}
+
+.expand-exit {
+  animation: expandOut 0.2s ease-in forwards;
+  will-change: opacity, transform;
+}
+
+@keyframes expandIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -10px, 0) scale3d(0.98, 0.98, 1);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+}
+
+@keyframes expandOut {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, -10px, 0) scale3d(0.98, 0.98, 1);
+  }
+}
+
+/* Smooth height transitions for collapsible content */
+.height-transition {
+  transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+  overflow: hidden;
+  will-change: max-height, opacity;
+}
+
+/* List item animations for dynamic content */
+.list-item-enter {
+  opacity: 0;
+  transform: translate3d(-10px, 0, 0);
+  animation: listItemIn 0.3s ease-out forwards;
+  will-change: opacity, transform;
+}
+
+.list-item-exit {
+  animation: listItemOut 0.2s ease-in forwards;
+  will-change: opacity, transform;
+}
+
+@keyframes listItemIn {
+  from {
+    opacity: 0;
+    transform: translate3d(-10px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes listItemOut {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(-10px, 0, 0);
+  }
+}
