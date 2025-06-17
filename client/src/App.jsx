@@ -36,6 +36,13 @@ import {
 } from "./redux/settingsSlice";
 import hadithBooks from "./constants/hadithBooks";
 import axios from "axios";
+import {
+  buildOptimizedImageUrl,
+  buildPlaceholderUrl,
+  loadImageProgressively,
+  imageCache,
+  getImageSizingInfo,
+} from "./utils/imageOptimization";
 
 const ACCESS_KEY = "CmH0hk3YgDGkNbMvPBhbNL8n23lQwrNnrneWYr-lVlc";
 
@@ -125,7 +132,9 @@ function App() {
     console.log("fetchBackground called:", {
       imageSource,
       uploadedImagesCount: uploadedImages.length,
+      imageSizingInfo: getImageSizingInfo(),
     });
+
     try {
       if (imageSource === "upload" && uploadedImages.length > 0) {
         // Use uploaded images in sequential order
@@ -142,24 +151,50 @@ function App() {
         const nextIndex =
           (currentUploadedImageIndex + 1) % uploadedImages.length;
         dispatch(setBackgroundCurrentUploadedImageIndex(nextIndex));
-        setBackgroundUrl(selectedImage.url);
+
+        // Optimize uploaded image if it's from Unsplash
+        const optimizedUrl = selectedImage.url.includes("unsplash.com")
+          ? buildOptimizedImageUrl(selectedImage.url)
+          : selectedImage.url;
+
+        setBackgroundUrl(optimizedUrl);
         setPhotoAuthorName("Your Upload");
         setPhotoAuthorLink("#");
-        dispatch(setBackgroundCurrentImageUrl(selectedImage.url));
+        dispatch(setBackgroundCurrentImageUrl(optimizedUrl));
         dispatch(setBackgroundLastRefreshTime(Date.now()));
         return; // Successfully set uploaded image
       } else if (imageSource === "category") {
-        console.log("Using category mode");
-        // In development, use a static image to save API resources
+        console.log("Using category mode with image optimization");
+
+        // Check cache first
+        const cacheKey = `${islamicCategory}-${
+          getImageSizingInfo().optimalWidth
+        }`;
+        const cachedImage = imageCache.get(cacheKey);
+
+        if (cachedImage && Math.random() > 0.3) {
+          // 70% chance to use cache
+          console.log("Using cached optimized image");
+          setBackgroundUrl(cachedImage.optimizedUrl);
+          setPhotoAuthorName(cachedImage.authorName);
+          setPhotoAuthorLink(cachedImage.authorLink);
+          dispatch(setBackgroundCurrentImageUrl(cachedImage.optimizedUrl));
+          dispatch(setBackgroundLastRefreshTime(Date.now()));
+          return;
+        }
+
+        // In development, use optimized static image
         if (process.env.NODE_ENV === "development") {
-          const devImage =
-            "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80";
-          setBackgroundUrl(devImage);
+          const devImageRaw =
+            "https://images.unsplash.com/photo-1506744038136-46273834b3fb";
+          const optimizedDevImage = buildOptimizedImageUrl(devImageRaw);
+
+          setBackgroundUrl(optimizedDevImage);
           setPhotoAuthorName("Annie Spratt");
           setPhotoAuthorLink(
             "https://unsplash.com/@anniespratt?utm_source=ilmtab&utm_medium=referral"
           );
-          dispatch(setBackgroundCurrentImageUrl(devImage));
+          dispatch(setBackgroundCurrentImageUrl(optimizedDevImage));
           dispatch(setBackgroundLastRefreshTime(Date.now()));
           return;
         }
@@ -189,17 +224,37 @@ function App() {
           }
         );
 
-        if (response.data && response.data.urls && response.data.urls.full) {
+        if (response.data && response.data.urls && response.data.urls.raw) {
           const data = response.data;
 
-          // Set image data with proper UTM parameters for attribution
-          setBackgroundUrl(data.urls.full);
+          // Build optimized image URL using Tabliss-style optimization
+          const optimizedUrl = buildOptimizedImageUrl(data.urls.raw);
+          const placeholderUrl = buildPlaceholderUrl(data.urls.raw);
+
+          console.log("Image optimization info:", {
+            original: data.urls.full,
+            optimized: optimizedUrl,
+            placeholder: placeholderUrl,
+            sizingInfo: getImageSizingInfo(),
+          });
+
+          // Set optimized image data with proper UTM parameters for attribution
+          setBackgroundUrl(optimizedUrl);
           setPhotoAuthorName(data.user.name);
           setPhotoAuthorLink(
             `${data.user.links.html}?utm_source=ilmtab&utm_medium=referral`
           );
-          dispatch(setBackgroundCurrentImageUrl(data.urls.full));
+          dispatch(setBackgroundCurrentImageUrl(optimizedUrl));
           dispatch(setBackgroundLastRefreshTime(Date.now()));
+
+          // Cache the optimized image
+          imageCache.set(cacheKey, {
+            optimizedUrl,
+            placeholderUrl,
+            authorName: data.user.name,
+            authorLink: `${data.user.links.html}?utm_source=ilmtab&utm_medium=referral`,
+            rawUrl: data.urls.raw,
+          });
 
           // CRITICAL: Trigger download tracking as required by Unsplash API
           // This is what the reviewer is checking for - downloads must be tracked
@@ -241,14 +296,17 @@ function App() {
       console.error("Failed to load background image", err);
     }
 
-    // Always use fallback image if we reach here (API failed or no uploaded images)
-    const fallback =
-      fallbackImageUrl ||
-      "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80";
-    setBackgroundUrl(fallback);
+    // Always use optimized fallback image if we reach here (API failed or no uploaded images)
+    const fallbackRaw =
+      "https://images.unsplash.com/photo-1506744038136-46273834b3fb";
+    const optimizedFallback =
+      buildOptimizedImageUrl(fallbackRaw) ||
+      `${fallbackRaw}?auto=format&fit=crop&w=1920&q=80`;
+
+    setBackgroundUrl(optimizedFallback);
     setPhotoAuthorName("Fallback Image");
     setPhotoAuthorLink("#");
-    dispatch(setBackgroundCurrentImageUrl(fallback));
+    dispatch(setBackgroundCurrentImageUrl(optimizedFallback));
     dispatch(setBackgroundLastRefreshTime(Date.now()));
   };
 
