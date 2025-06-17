@@ -3,15 +3,10 @@ import ReactDOM from "react-dom/client";
 import store from "./store";
 import "./styles/animations.css";
 import { Provider, useSelector, useDispatch } from "react-redux";
-import {
-  CssBaseline,
-  Container,
-  CircularProgress,
-  Box,
-  IconButton,
-  Tooltip,
-  Snackbar,
-} from "@mui/material";
+import CssBaseline from "@mui/material/CssBaseline";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
 import ErrorDisplay from "./components/ErrorDisplay";
 import AyahCard from "./components/AyahCard";
 import HadithCard from "./components/HadithCard";
