@@ -7,22 +7,26 @@ const greetingMessages = {
       `Assalamu Alaikum, ${name}! May your morning be filled with barakah ☀️`,
     (name) => `Good morning, ${name}! Begin your day with Bismillah 🌅`,
     (name) => `Rise and shine, ${name}! May Allah bless your day 🌞`,
+    (name) => `Assalamu Alaikum, ${name}! Today is a gift from Allah 🎁`,
   ],
   afternoon: [
     (name) => `May your afternoon be filled with peace and barakah, ${name} 🌼`,
     (name) => `Hello ${name}, stay grateful and patient this afternoon ☀️`,
     (name) => `${name}, keep going — Allah is with those who persevere 🍃`,
+    (name) => `Stay strong, ${name}! Every challenge brings growth 🌱`,
   ],
   evening: [
     (name) => `Good evening, ${name}! Reflect and remember Allah 🌙`,
     (name) =>
       `Good evening, ${name}! May Allah's light guide you through the night 🌠`,
     (name) => `Assalamu Alaikum, ${name}. Wind down with dhikr 🌌`,
+    (name) => `Alhamdulillah for today, ${name}! Make it count 💫`,
   ],
   night: [
     (name) => `Good night, ${name}. May Allah grant you restful sleep ⭐`,
     (name) => `Sleep well, ${name}! Don’t forget your evening du'as 🌟`,
     (name) => `${name}, end your day with gratitude and tawakkul 🌙`,
+    (name) => `${name}, trust Allah with tomorrow's blessings 💤`,
   ],
 };
 
@@ -40,8 +44,8 @@ const Greeting = ({ name = "Friend" }) => {
   const timeOfDay = getTimeOfDay();
   const messages = greetingMessages[timeOfDay];
 
-  // Calculate responsive font size based on message length to prevent line wrapping
-  const getResponsiveFontSize = (message) => {
+  // Calculate responsive font size and weight based on message length
+  const getResponsiveTypography = (message) => {
     const messageLength = message.length;
 
     // Base font sizes for different screen sizes
@@ -51,25 +55,44 @@ const Greeting = ({ name = "Friend" }) => {
       md: 2.125,
     };
 
+    // Base font weights for different message lengths
+    const baseWeights = {
+      short: 600, // Bold for short, impactful messages
+      medium: 500, // Medium for balanced messages
+      long: 400, // Light for long messages (better readability)
+    };
+
     // More aggressive scaling to prevent line wrapping
     let sizeFactor = 1;
+    let weightCategory = "medium";
+
     if (messageLength > 90) {
       sizeFactor = 0.55; // Much smaller for very long messages
+      weightCategory = "long";
     } else if (messageLength > 75) {
       sizeFactor = 0.65; // Significantly smaller for long messages
+      weightCategory = "long";
     } else if (messageLength > 60) {
       sizeFactor = 0.75; // Smaller for medium-long messages
+      weightCategory = "long";
     } else if (messageLength > 45) {
       sizeFactor = 0.85; // Slightly smaller for medium messages
+      weightCategory = "medium";
     } else if (messageLength > 30) {
       sizeFactor = 0.95; // Barely smaller for short-medium messages
+      weightCategory = "medium";
+    } else {
+      // Very short messages (≤30 chars) keep full size and get bold weight
+      weightCategory = "short";
     }
-    // Very short messages (≤30 chars) keep full size
 
     return {
-      xs: `${baseSizes.xs * sizeFactor}rem`,
-      sm: `${baseSizes.sm * sizeFactor}rem`,
-      md: `${baseSizes.md * sizeFactor}rem`,
+      fontSize: {
+        xs: `${baseSizes.xs * sizeFactor}rem`,
+        sm: `${baseSizes.sm * sizeFactor}rem`,
+        md: `${baseSizes.md * sizeFactor}rem`,
+      },
+      fontWeight: baseWeights[weightCategory],
     };
   };
 
@@ -86,7 +109,7 @@ const Greeting = ({ name = "Friend" }) => {
   }, [messages.length]);
 
   const currentMessage = messages[messageIndex](name);
-  const responsiveFontSize = getResponsiveFontSize(currentMessage);
+  const responsiveTypography = getResponsiveTypography(currentMessage);
 
   return (
     <Box
@@ -99,13 +122,13 @@ const Greeting = ({ name = "Friend" }) => {
         <Typography
           variant="h4"
           sx={{
-            fontWeight: 700,
+            fontWeight: responsiveTypography.fontWeight,
             color: "white",
-            fontFamily: "'Inter', 'Segoe UI', sans-serif",
+            fontFamily: "'Poppins', 'Inter', 'Segoe UI', sans-serif",
             userSelect: "none",
             lineHeight: 1.4,
             textAlign: "center",
-            fontSize: responsiveFontSize,
+            fontSize: responsiveTypography.fontSize,
             letterSpacing: "0.02em",
             whiteSpace: "nowrap", // Force single line
             overflow: "hidden", // Hide any overflow
