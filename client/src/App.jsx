@@ -67,6 +67,10 @@ function App() {
   // Page load animation state
   const [pageLoadComplete, setPageLoadComplete] = useState(false);
 
+  // View mode transition state
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [transitionDirection, setTransitionDirection] = useState(null);
+
   const dispatch = useDispatch();
   const favorites = useSelector((state) => state.favorites.items);
   const textEdition = useSelector(
@@ -280,8 +284,10 @@ function App() {
       params.append("audio_edition", audioEdition);
 
       const res = await axios.get(
-        `http://localhost:4000/api/ayat?${params.toString()}`
+        `http://localhost:4000/api/ayat?${params.toString()}`,
+        { timeout: 10000 }
       );
+
       const data = res.data;
       setAyah(data);
       setCurrentSurah(data.surah.number);
@@ -309,7 +315,13 @@ function App() {
         params.append("hadithNumber", hadithNumber);
       }
 
-      const res = await axios.get(`http://localhost:4000/api/hadith?${params}`);
+      const res = await axios.get(
+        `http://localhost:4000/api/hadith?${params}`,
+        {
+          timeout: 12000,
+        }
+      );
+
       const data = res.data;
       setHadith(data);
       setCurrentHadithNumber(Number(data.number));
@@ -396,16 +408,48 @@ function App() {
   };
 
   const slideTypes = ["ayah", "hadith"];
+
   const handleNextSlide = () => {
+    if (isTransitioning) return; // Prevent multiple transitions
+
+    setIsTransitioning(true);
+    setTransitionDirection("next");
+
     const currentIndex = slideTypes.indexOf(viewMode);
     const nextIndex = (currentIndex + 1) % slideTypes.length;
-    setViewMode(slideTypes[nextIndex]);
+
+    // Small delay to allow exit animation, then change mode
+    setTimeout(() => {
+      setViewMode(slideTypes[nextIndex]);
+
+      // Reset transition state after entrance animation
+      setTimeout(() => {
+        setIsTransitioning(false);
+        setTransitionDirection(null);
+      }, 400);
+    }, 150);
   };
+
   const handlePrevSlide = () => {
+    if (isTransitioning) return; // Prevent multiple transitions
+
+    setIsTransitioning(true);
+    setTransitionDirection("prev");
+
     const currentIndex = slideTypes.indexOf(viewMode);
     const prevIndex =
       (currentIndex - 1 + slideTypes.length) % slideTypes.length;
-    setViewMode(slideTypes[prevIndex]);
+
+    // Small delay to allow exit animation, then change mode
+    setTimeout(() => {
+      setViewMode(slideTypes[prevIndex]);
+
+      // Reset transition state after entrance animation
+      setTimeout(() => {
+        setIsTransitioning(false);
+        setTransitionDirection(null);
+      }, 400);
+    }, 150);
   };
 
   // Handle favorites for both ayah and hadith, store id uniquely
@@ -493,6 +537,19 @@ function App() {
     return `page-load-stagger-${staggerLevel}`;
   };
 
+  // Helper function to get view transition animation class
+  const getViewTransitionClass = () => {
+    if (!isTransitioning) return "view-cross-fade";
+
+    if (transitionDirection === "next") {
+      return "view-slide-in-right";
+    } else if (transitionDirection === "prev") {
+      return "view-slide-in-left";
+    }
+
+    return "view-cross-fade";
+  };
+
   return (
     <>
       <CssBaseline />
@@ -572,10 +629,17 @@ function App() {
             </IconButton>
           </Box>
 
-          <Box sx={{ width: "100%", maxWidth: "900px", mx: "auto" }}>
+          <Box
+            sx={{ width: "100%", maxWidth: "900px", mx: "auto" }}
+            className="view-transition-container"
+          >
             {/* Ayah Content or Skeleton */}
             {viewMode === "ayah" && (
-              <div className={getAnimationClass(2)}>
+              <div
+                className={`${getAnimationClass(
+                  2
+                )} ${getViewTransitionClass()}`}
+              >
                 {loading ? (
                   <AyahCardSkeleton />
                 ) : ayah ? (
@@ -595,7 +659,11 @@ function App() {
 
             {/* Hadith Content or Skeleton */}
             {viewMode === "hadith" && (
-              <div className={getAnimationClass(2)}>
+              <div
+                className={`${getAnimationClass(
+                  2
+                )} ${getViewTransitionClass()}`}
+              >
                 {hadithLoading ? (
                   <HadithCardSkeleton />
                 ) : hadith ? (

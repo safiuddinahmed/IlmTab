@@ -4,6 +4,53 @@ const router = express.Router();
 
 const MAX_AYAH = 6236;
 
+// Lightweight fetch function with timeout (no caching for browser extension)
+const fetchAyahData = async (ayahIdentifier, textEdition, audioEdition) => {
+  // Simple timeout wrapper
+  const fetchWithTimeout = (url, timeout = 8000) => {
+    return Promise.race([
+      fetch(url),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), timeout)
+      )
+    ]);
+  };
+  
+  const [textResponse, audioResponse] = await Promise.all([
+    fetchWithTimeout(`http://api.alquran.cloud/v1/ayah/${ayahIdentifier}/${textEdition}`),
+    fetchWithTimeout(`http://api.alquran.cloud/v1/ayah/${ayahIdentifier}/${audioEdition}`)
+  ]);
+
+  if (!textResponse.ok || !audioResponse.ok) {
+    throw new Error('Failed to fetch ayah');
+  }
+
+  const textData = await textResponse.json();
+  const audioData = await audioResponse.json();
+  const d = textData.data;
+  const a = audioData.data;
+
+  return {
+    number: d.number,
+    text: d.text,
+    arabicText: a.text,
+    editionName: d.edition.englishName,
+    sajda: d.sajda,
+    surah: {
+      number: d.surah.number,
+      name: d.surah.name,
+      englishNameTranslation: d.surah.englishNameTranslation,
+      numberOfAyahs: d.surah.numberOfAyahs,
+      ayahNumberInSurah: d.numberInSurah,
+      revelationType: d.surah.revelationType,
+    },
+    audio: {
+      main: a.audio,
+      secondary: a.audioSecondary,
+    }
+  };
+};
+
 router.get('/', async (req, res) => {
   try {
     const {
@@ -21,38 +68,9 @@ router.get('/', async (req, res) => {
       ayahIdentifier = randomAyahNumber;
     }
 
-    const [textResponse, audioResponse] = await Promise.all([
-      fetch(`http://api.alquran.cloud/v1/ayah/${ayahIdentifier}/${text_edition}`),
-      fetch(`http://api.alquran.cloud/v1/ayah/${ayahIdentifier}/${audio_edition}`)
-    ]);
-
-    if (!textResponse.ok || !audioResponse.ok) throw new Error('Failed to fetch ayah');
-
-    const textData = await textResponse.json();
-    const audioData = await audioResponse.json();
-    const d = textData.data;
-    const a = audioData.data;
-
-    const result = {
-      number: d.number,
-      text: d.text,
-      arabicText: a.text,
-      editionName: d.edition.englishName,
-      sajda: d.sajda,
-      surah: {
-        number: d.surah.number,
-        name: d.surah.name,
-        englishNameTranslation: d.surah.englishNameTranslation,
-        numberOfAyahs: d.surah.numberOfAyahs,
-        ayahNumberInSurah: d.numberInSurah,
-        revelationType: d.surah.revelationType,
-      },
-      audio: {
-        main: a.audio,
-        secondary: a.audioSecondary,
-      }
-    };
-
+    // Simple, lightweight fetch
+    const result = await fetchAyahData(ayahIdentifier, text_edition, audio_edition);
+    
     res.json(result);
   } catch (error) {
     console.error(error);
