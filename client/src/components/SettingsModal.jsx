@@ -40,6 +40,7 @@ import { tafsirsByLanguage } from "../constants/tafsirsByLanguage";
 import { textEditions } from "../constants/textEditions";
 import { audioEditions } from "../constants/audioEditions";
 import { hadithBooks } from "../constants/hadithBooks";
+import Flag from "./Flag";
 import { useSelector, useDispatch } from "react-redux";
 import {
   setTafsirLanguage,
@@ -611,17 +612,29 @@ export default function SettingsModal({ open, onClose }) {
                         >
                           {Object.keys(tafsirsByLanguage).map((lang) => {
                             const languageMap = {
-                              english: "🇺🇸 English",
-                              bengali: "🇧🇩 Bengali",
-                              arabic: "🇸🇦 Arabic",
-                              russian: "🇷🇺 Russian",
-                              urdu: "🇵🇰 Urdu",
-                              kurdish: "🏴 Kurdish",
+                              english: { flag: "gb", name: "English" },
+                              bengali: { flag: "bd", name: "Bengali" },
+                              arabic: { flag: "sa", name: "Arabic" },
+                              russian: { flag: "ru", name: "Russian" },
+                              urdu: { flag: "pk", name: "Urdu" },
+                              kurdish: { flag: "iq", name: "Kurdish" },
+                            };
+                            const langInfo = languageMap[lang] || {
+                              flag: null,
+                              name:
+                                lang.charAt(0).toUpperCase() + lang.slice(1),
                             };
                             return (
                               <MenuItem key={lang} value={lang}>
-                                {languageMap[lang] ||
-                                  lang.charAt(0).toUpperCase() + lang.slice(1)}
+                                <Box display="flex" alignItems="center" gap={1}>
+                                  {langInfo.flag && (
+                                    <Flag
+                                      countryCode={langInfo.flag}
+                                      size="small"
+                                    />
+                                  )}
+                                  <Typography>{langInfo.name}</Typography>
+                                </Box>
                               </MenuItem>
                             );
                           })}
@@ -665,18 +678,30 @@ export default function SettingsModal({ open, onClose }) {
                         >
                           {Object.keys(textEditions).map((lang) => {
                             const languageMap = {
-                              en: "🇺🇸 English",
-                              fr: "🇫🇷 French",
-                              es: "🇪🇸 Spanish",
-                              ur: "🇵🇰 Urdu",
-                              id: "🇮🇩 Indonesian",
-                              hi: "🇮🇳 Hindi",
-                              ta: "🇮🇳 Tamil",
-                              az: "🇦🇿 Azerbaijani",
+                              en: { flag: "gb", name: "English" },
+                              fr: { flag: "fr", name: "French" },
+                              es: { flag: "es", name: "Spanish" },
+                              ur: { flag: "pk", name: "Urdu" },
+                              id: { flag: "id", name: "Indonesian" },
+                              hi: { flag: "in", name: "Hindi" },
+                              ta: { flag: "in", name: "Tamil" },
+                              az: { flag: "az", name: "Azerbaijani" },
+                            };
+                            const langInfo = languageMap[lang] || {
+                              flag: null,
+                              name: lang.toUpperCase(),
                             };
                             return (
                               <MenuItem key={lang} value={lang}>
-                                {languageMap[lang] || lang.toUpperCase()}
+                                <Box display="flex" alignItems="center" gap={1}>
+                                  {langInfo.flag && (
+                                    <Flag
+                                      countryCode={langInfo.flag}
+                                      size="small"
+                                    />
+                                  )}
+                                  <Typography>{langInfo.name}</Typography>
+                                </Box>
                               </MenuItem>
                             );
                           })}
@@ -793,8 +818,18 @@ export default function SettingsModal({ open, onClose }) {
                           }
                           label="Translation Language"
                         >
-                          <MenuItem value="en">🇺🇸 English</MenuItem>
-                          <MenuItem value="ur">🇵🇰 Urdu</MenuItem>
+                          <MenuItem value="en">
+                            <Box display="flex" alignItems="center" gap={1}>
+                              <Flag countryCode="gb" size="small" />
+                              <Typography>English</Typography>
+                            </Box>
+                          </MenuItem>
+                          <MenuItem value="ur">
+                            <Box display="flex" alignItems="center" gap={1}>
+                              <Flag countryCode="pk" size="small" />
+                              <Typography>Urdu</Typography>
+                            </Box>
+                          </MenuItem>
                         </Select>
                       </StyledFormControl>
                     </StyledPaper>

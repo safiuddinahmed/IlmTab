@@ -159,7 +159,8 @@ function App() {
           nature: "nature,landscape,mountains,sky,peaceful",
           architecture: "mosque,islamic architecture,minaret,dome",
           calligraphy: "arabic calligraphy,islamic art",
-          geometric: "islamic pattern,geometric,mandala,symmetry",
+          geometric:
+            "islamic pattern,islamic geometric,mandala,islamic symmetry",
         };
 
         const query =
