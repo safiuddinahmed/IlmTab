@@ -22,8 +22,10 @@ import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import SettingsIcon from "@mui/icons-material/Settings";
+import SearchIcon from "@mui/icons-material/Search";
 import FavoritesModal from "./components/FavoritesModal";
 import SettingsModal from "./components/SettingsModal";
+import QuranSearch from "./components/QuranSearch";
 import {
   addFavorite,
   removeFavorite,
@@ -57,6 +59,7 @@ function App() {
   const [viewMode, setViewMode] = useState("ayah"); // 'ayah' or 'hadith'
   const [modalOpen, setModalOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const dispatch = useDispatch();
   const favorites = useSelector((state) => state.favorites.items);
@@ -438,6 +441,12 @@ function App() {
     }
   };
 
+  // Handle search result selection
+  const handleSearchSelectAyah = (surahNumber, ayahNumber) => {
+    setViewMode("ayah");
+    fetchAyah(surahNumber, ayahNumber);
+  };
+
   const backgroundStyle = {
     backgroundImage: backgroundUrl ? `url(${backgroundUrl})` : "none",
     backgroundSize: "cover",
@@ -608,6 +617,20 @@ function App() {
             </IconButton>
           </Tooltip>
 
+          <Tooltip title="Search Quran">
+            <IconButton
+              size="large"
+              sx={{
+                backgroundColor: "#fff",
+                boxShadow: 2,
+                "&:hover": { backgroundColor: "#eee" },
+              }}
+              onClick={() => setSearchOpen(true)}
+            >
+              <SearchIcon color="primary" />
+            </IconButton>
+          </Tooltip>
+
           <FavoritesModal
             open={modalOpen}
             onClose={() => setModalOpen(false)}
@@ -621,6 +644,14 @@ function App() {
             onClose={() => setSettingsOpen(false)}
           />
         </Box>
+
+        {/* Quran Search Modal */}
+        {searchOpen && (
+          <QuranSearch
+            onSelectAyah={handleSearchSelectAyah}
+            onClose={() => setSearchOpen(false)}
+          />
+        )}
 
         {/* Unsplash credit */}
         {backgroundUrl && (

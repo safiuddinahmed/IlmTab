@@ -71,6 +71,8 @@ const AudioPlayer = ({
         text: ayah.text,
         audio: src,
         note: "",
+        surahName: ayah.surah.englishNameTranslation,
+        surahArabicName: ayah.surah.name,
       };
       dispatch(addFavorite(favoriteObject));
     }

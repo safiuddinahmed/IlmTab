@@ -206,7 +206,11 @@ export default function FavoritesModal({
         113: "Al-Falaq",
         114: "An-Nas",
       };
-      surahName = surahNames[item.surahNumber] || `Surah ${item.surahNumber}`;
+      // Use stored surah name if available, otherwise fall back to hardcoded mapping
+      surahName =
+        item.surahName ||
+        surahNames[item.surahNumber] ||
+        `Surah ${item.surahNumber}`;
       title = `Surah ${item.surahNumber}: ${surahName}, Ayah ${item.ayahNumber}`;
     } else {
       // Use bookDisplayName for display, fallback to book if not available
