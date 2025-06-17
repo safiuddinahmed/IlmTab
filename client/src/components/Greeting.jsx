@@ -40,6 +40,39 @@ const Greeting = ({ name = "Friend" }) => {
   const timeOfDay = getTimeOfDay();
   const messages = greetingMessages[timeOfDay];
 
+  // Calculate responsive font size based on message length to prevent line wrapping
+  const getResponsiveFontSize = (message) => {
+    const messageLength = message.length;
+
+    // Base font sizes for different screen sizes
+    const baseSizes = {
+      xs: 1.5, // rem
+      sm: 2.0,
+      md: 2.125,
+    };
+
+    // More aggressive scaling to prevent line wrapping
+    let sizeFactor = 1;
+    if (messageLength > 90) {
+      sizeFactor = 0.55; // Much smaller for very long messages
+    } else if (messageLength > 75) {
+      sizeFactor = 0.65; // Significantly smaller for long messages
+    } else if (messageLength > 60) {
+      sizeFactor = 0.75; // Smaller for medium-long messages
+    } else if (messageLength > 45) {
+      sizeFactor = 0.85; // Slightly smaller for medium messages
+    } else if (messageLength > 30) {
+      sizeFactor = 0.95; // Barely smaller for short-medium messages
+    }
+    // Very short messages (≤30 chars) keep full size
+
+    return {
+      xs: `${baseSizes.xs * sizeFactor}rem`,
+      sm: `${baseSizes.sm * sizeFactor}rem`,
+      md: `${baseSizes.md * sizeFactor}rem`,
+    };
+  };
+
   useEffect(() => {
     const interval = setInterval(() => {
       setFadeIn(false);
@@ -52,6 +85,9 @@ const Greeting = ({ name = "Friend" }) => {
     return () => clearInterval(interval);
   }, [messages.length]);
 
+  const currentMessage = messages[messageIndex](name);
+  const responsiveFontSize = getResponsiveFontSize(currentMessage);
+
   return (
     <Box
       textAlign="center"
@@ -63,32 +99,25 @@ const Greeting = ({ name = "Friend" }) => {
         <Typography
           variant="h4"
           sx={{
-            fontWeight: 700,
+            fontWeight: 500,
             color: "white",
-            fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+            fontFamily: "'Inter', 'Segoe UI', sans-serif",
             userSelect: "none",
-            height: "6rem", // Fixed height to prevent layout shifts
-            lineHeight: 1.3,
+            lineHeight: 1.4,
             textAlign: "center",
-            px: 2,
+            fontSize: responsiveFontSize,
+            letterSpacing: "0.02em",
+            whiteSpace: "nowrap", // Force single line
+            overflow: "hidden", // Hide any overflow
+            textOverflow: "ellipsis", // Add ellipsis if somehow still too long
+            textShadow: "1px 1px 3px rgba(0, 0, 0, 0.5)",
+            minHeight: "3.5rem", // Fixed minimum height to prevent layout shifts
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            // Strong text shadow for visibility on any background
-            textShadow: `
-              3px 3px 6px rgba(0, 0, 0, 0.9),
-              -2px -2px 4px rgba(0, 0, 0, 0.8),
-              2px -2px 4px rgba(0, 0, 0, 0.8),
-              -2px 2px 4px rgba(0, 0, 0, 0.8),
-              0px 0px 8px rgba(0, 0, 0, 0.7)
-            `,
-            // Allow text to wrap naturally
-            wordWrap: "break-word",
-            overflowWrap: "break-word",
-            hyphens: "auto",
           }}
         >
-          {messages[messageIndex](name)}
+          {currentMessage}
         </Typography>
       </Fade>
     </Box>
