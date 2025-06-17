@@ -21,9 +21,12 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import SettingsIcon from "@mui/icons-material/Settings";
 import SearchIcon from "@mui/icons-material/Search";
-import FavoritesModal from "./components/FavoritesModal";
-import SettingsModal from "./components/SettingsModal";
-import QuranSearch from "./components/QuranSearch";
+import { lazy, Suspense } from "react";
+
+// Lazy load heavy modals to reduce initial bundle size
+const FavoritesModal = lazy(() => import("./components/FavoritesModal"));
+const SettingsModal = lazy(() => import("./components/SettingsModal"));
+const QuranSearch = lazy(() => import("./components/QuranSearch"));
 import {
   addFavorite,
   removeFavorite,
@@ -839,26 +842,32 @@ function App() {
             </IconButton>
           </Tooltip>
 
-          <FavoritesModal
-            open={modalOpen}
-            onClose={() => setModalOpen(false)}
-            favorites={favorites}
-            onUpdateNote={handleUpdateNote}
-            onDeleteFavorite={handleDeleteFavorite}
-            onNavigateToFavorite={handleNavigateToFavorite}
-          />
-          <SettingsModal
-            open={settingsOpen}
-            onClose={() => setSettingsOpen(false)}
-          />
+          <Suspense fallback={<div />}>
+            <FavoritesModal
+              open={modalOpen}
+              onClose={() => setModalOpen(false)}
+              favorites={favorites}
+              onUpdateNote={handleUpdateNote}
+              onDeleteFavorite={handleDeleteFavorite}
+              onNavigateToFavorite={handleNavigateToFavorite}
+            />
+          </Suspense>
+          <Suspense fallback={<div />}>
+            <SettingsModal
+              open={settingsOpen}
+              onClose={() => setSettingsOpen(false)}
+            />
+          </Suspense>
         </Box>
 
         {/* Quran Search Modal */}
         {searchOpen && (
-          <QuranSearch
-            onSelectAyah={handleSearchSelectAyah}
-            onClose={() => setSearchOpen(false)}
-          />
+          <Suspense fallback={<div />}>
+            <QuranSearch
+              onSelectAyah={handleSearchSelectAyah}
+              onClose={() => setSearchOpen(false)}
+            />
+          </Suspense>
         )}
 
         {/* Unsplash credit */}

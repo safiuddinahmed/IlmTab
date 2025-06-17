@@ -1,24 +1,20 @@
 import React from "react";
-import {
-  Modal,
-  Box,
-  Typography,
-  IconButton,
-  Tabs,
-  Tab,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  TextField,
-  Switch,
-  Paper,
-  Divider,
-  Chip,
-  Avatar,
-  Fade,
-  Slide,
-} from "@mui/material";
+import Modal from "@mui/material/Modal";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import IconButton from "@mui/material/IconButton";
+import Tabs from "@mui/material/Tabs";
+import Tab from "@mui/material/Tab";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import TextField from "@mui/material/TextField";
+import Switch from "@mui/material/Switch";
+import Paper from "@mui/material/Paper";
+import Avatar from "@mui/material/Avatar";
+import Fade from "@mui/material/Fade";
+import Slide from "@mui/material/Slide";
 import {
   Close as CloseIcon,
   MenuBook as MenuBookIcon,

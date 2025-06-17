@@ -1,18 +1,14 @@
 import React, { useState } from "react";
-import {
-  Modal,
-  Box,
-  Tabs,
-  Tab,
-  Typography,
-  IconButton,
-  Divider,
-  TextField,
-  Tooltip,
-  Paper,
-  Slide,
-  Collapse,
-} from "@mui/material";
+import Modal from "@mui/material/Modal";
+import Box from "@mui/material/Box";
+import Tabs from "@mui/material/Tabs";
+import Tab from "@mui/material/Tab";
+import Typography from "@mui/material/Typography";
+import IconButton from "@mui/material/IconButton";
+import TextField from "@mui/material/TextField";
+import Paper from "@mui/material/Paper";
+import Slide from "@mui/material/Slide";
+import Collapse from "@mui/material/Collapse";
 import {
   Close as CloseIcon,
   Delete as DeleteIcon,
