@@ -64,6 +64,9 @@ function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
+  // Page load animation state
+  const [pageLoadComplete, setPageLoadComplete] = useState(false);
+
   const dispatch = useDispatch();
   const favorites = useSelector((state) => state.favorites.items);
   const textEdition = useSelector(
@@ -323,6 +326,15 @@ function App() {
     fetchAyah();
   }, []);
 
+  // Page load animation completion
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPageLoadComplete(true);
+    }, 2000); // After all staggered animations complete
+
+    return () => clearTimeout(timer);
+  }, []);
+
   // When text/audio editions change, refetch the current ayah (if any)
   useEffect(() => {
     if (currentSurah != null && currentAyah != null) {
@@ -475,10 +487,16 @@ function App() {
     position: "relative",
   };
 
+  // Helper function to get animation class
+  const getAnimationClass = (staggerLevel) => {
+    if (pageLoadComplete) return "page-load-complete";
+    return `page-load-stagger-${staggerLevel}`;
+  };
+
   return (
     <>
       <CssBaseline />
-      <div style={backgroundStyle}>
+      <div style={backgroundStyle} className="page-load-background">
         <Box
           sx={{
             minHeight: "100vh",
@@ -523,6 +541,7 @@ function App() {
               display: "flex",
               alignItems: "center",
             }}
+            className={getAnimationClass(1)}
           >
             <IconButton
               onClick={handlePrevSlide}
@@ -556,7 +575,7 @@ function App() {
           <Box sx={{ width: "100%", maxWidth: "900px", mx: "auto" }}>
             {/* Ayah Content or Skeleton */}
             {viewMode === "ayah" && (
-              <>
+              <div className={getAnimationClass(2)}>
                 {loading ? (
                   <AyahCardSkeleton />
                 ) : ayah ? (
@@ -571,12 +590,12 @@ function App() {
                     />
                   </div>
                 ) : null}
-              </>
+              </div>
             )}
 
             {/* Hadith Content or Skeleton */}
             {viewMode === "hadith" && (
-              <>
+              <div className={getAnimationClass(2)}>
                 {hadithLoading ? (
                   <HadithCardSkeleton />
                 ) : hadith ? (
@@ -593,17 +612,29 @@ function App() {
                     />
                   </div>
                 ) : null}
-              </>
+              </div>
             )}
 
             {/* Weather Content or Skeleton */}
-            {weatherEnabled && <DateTimeWeather />}
+            {weatherEnabled && (
+              <div className={getAnimationClass(3)}>
+                <DateTimeWeather />
+              </div>
+            )}
 
             {/* Greeting - always show when enabled */}
-            {greetingsEnabled && <Greeting name={greetingsName} />}
+            {greetingsEnabled && (
+              <div className={getAnimationClass(4)}>
+                <Greeting name={greetingsName} />
+              </div>
+            )}
 
             {/* Tasks - always show when enabled */}
-            {tasksEnabled && <ToDoList />}
+            {tasksEnabled && (
+              <div className={getAnimationClass(5)}>
+                <ToDoList />
+              </div>
+            )}
           </Box>
         </Box>
 
@@ -617,6 +648,7 @@ function App() {
             gap: 1,
             zIndex: 1500,
           }}
+          className={getAnimationClass(6)}
         >
           <Tooltip title="Favorites">
             <IconButton

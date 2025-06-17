@@ -225,6 +225,91 @@
   perspective: 1000px;
 }
 
+/* Page Load Staggered Animations */
+@keyframes pageLoadFadeInUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 30px, 0) scale3d(0.95, 0.95, 1);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+}
+
+@keyframes pageLoadBackgroundFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Page load staggered entrance classes */
+.page-load-background {
+  opacity: 0;
+  animation: pageLoadBackgroundFade 1s ease-out forwards;
+  animation-delay: 0ms;
+  will-change: opacity;
+}
+
+.page-load-stagger-1 {
+  opacity: 0;
+  transform: translate3d(0, 30px, 0) scale3d(0.95, 0.95, 1);
+  animation: pageLoadFadeInUp 0.6s ease-out forwards;
+  animation-delay: 200ms;
+  will-change: opacity, transform;
+}
+
+.page-load-stagger-2 {
+  opacity: 0;
+  transform: translate3d(0, 30px, 0) scale3d(0.95, 0.95, 1);
+  animation: pageLoadFadeInUp 0.6s ease-out forwards;
+  animation-delay: 400ms;
+  will-change: opacity, transform;
+}
+
+.page-load-stagger-3 {
+  opacity: 0;
+  transform: translate3d(0, 30px, 0) scale3d(0.95, 0.95, 1);
+  animation: pageLoadFadeInUp 0.6s ease-out forwards;
+  animation-delay: 600ms;
+  will-change: opacity, transform;
+}
+
+.page-load-stagger-4 {
+  opacity: 0;
+  transform: translate3d(0, 30px, 0) scale3d(0.95, 0.95, 1);
+  animation: pageLoadFadeInUp 0.6s ease-out forwards;
+  animation-delay: 800ms;
+  will-change: opacity, transform;
+}
+
+.page-load-stagger-5 {
+  opacity: 0;
+  transform: translate3d(0, 30px, 0) scale3d(0.95, 0.95, 1);
+  animation: pageLoadFadeInUp 0.6s ease-out forwards;
+  animation-delay: 1000ms;
+  will-change: opacity, transform;
+}
+
+.page-load-stagger-6 {
+  opacity: 0;
+  transform: translate3d(0, 30px, 0) scale3d(0.95, 0.95, 1);
+  animation: pageLoadFadeInUp 0.6s ease-out forwards;
+  animation-delay: 1200ms;
+  will-change: opacity, transform;
+}
+
+/* Page load complete state - removes animation properties for performance */
+.page-load-complete {
+  opacity: 1 !important;
+  transform: translate3d(0, 0, 0) scale3d(1, 1, 1) !important;
+  animation: none !important;
+  will-change: auto !important;
+}
+
 /* Smooth expand/collapse animations */
 .expand-enter {
   opacity: 0;
