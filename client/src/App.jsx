@@ -9,10 +9,9 @@ import {
   Box,
   IconButton,
   Tooltip,
-  Alert,
-  AlertTitle,
   Snackbar,
 } from "@mui/material";
+import ErrorDisplay from "./components/ErrorDisplay";
 import AyahCard from "./components/AyahCard";
 import HadithCard from "./components/HadithCard";
 import Greeting from "./components/Greeting";
@@ -189,6 +188,21 @@ function App() {
           setPhotoAuthorLink(data.user.links.html);
           dispatch(setBackgroundCurrentImageUrl(data.urls.full));
           dispatch(setBackgroundLastRefreshTime(Date.now()));
+
+          // Trigger download tracking as required by Unsplash API
+          if (data.links && data.links.download_location) {
+            try {
+              await axios.get(data.links.download_location, {
+                headers: {
+                  Authorization: `Client-ID ${ACCESS_KEY}`,
+                },
+              });
+              console.log("Download tracked for Unsplash image:", data.id);
+            } catch (err) {
+              console.error("Failed to track download:", err);
+            }
+          }
+
           return; // Successfully set API image
         } else {
           throw new Error("Invalid API response");
@@ -483,29 +497,25 @@ function App() {
             </Box>
           )}
           {/* Enhanced Error Display */}
-          <Snackbar
-            open={!!error}
-            autoHideDuration={6000}
-            onClose={() => setError(null)}
-            anchorOrigin={{ vertical: "top", horizontal: "center" }}
-            sx={{ mt: 8 }}
-          >
-            <Alert
-              onClose={() => setError(null)}
-              severity="error"
-              variant="filled"
+          {error && (
+            <Box
               sx={{
-                backgroundColor: "rgba(211, 47, 47, 0.9)",
-                backdropFilter: "blur(10px)",
-                boxShadow: "0 8px 30px rgba(0, 0, 0, 0.15)",
-                borderRadius: 2,
-                minWidth: "300px",
+                position: "fixed",
+                top: 20,
+                left: "50%",
+                transform: "translateX(-50%)",
+                zIndex: 2000,
+                width: "90%",
+                maxWidth: "500px",
               }}
             >
-              <AlertTitle>Connection Error</AlertTitle>
-              {error}
-            </Alert>
-          </Snackbar>
+              <ErrorDisplay
+                error={error}
+                onDismiss={() => setError(null)}
+                showDetails={process.env.NODE_ENV === "development"}
+              />
+            </Box>
+          )}
 
           <Box
             sx={{
