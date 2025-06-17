@@ -482,12 +482,23 @@ export default function SettingsModal({ open, onClose }) {
       <Slide direction="right" in={open} mountOnEnter unmountOnExit>
         <Box
           sx={{
-            width: 480,
+            width: {
+              xs: "100vw", // Full width on mobile
+              sm: "70vw", // 70% width on small tablets
+              md: "50vw", // 50% width on medium screens
+              lg: "35vw", // 35% width on large screens
+              xl: "25vw", // 25% width on extra large screens
+            },
+            maxWidth: "480px", // Maximum width cap
+            minWidth: "320px", // Minimum width for usability
             height: "100vh",
             overflowY: "auto",
             bgcolor: "rgba(255, 255, 255, 0.98)",
             backdropFilter: "blur(20px)",
-            borderRadius: "0 20px 20px 0",
+            borderRadius: {
+              xs: 0, // No border radius on mobile (full width)
+              sm: "0 20px 20px 0", // Border radius on larger screens
+            },
             boxShadow: "0 25px 50px rgba(0, 0, 0, 0.15)",
             position: "fixed",
             top: 0,

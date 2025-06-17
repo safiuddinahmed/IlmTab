@@ -158,7 +158,7 @@ function App() {
         const categoryQueries = {
           nature: "nature,landscape,mountains,sky,peaceful",
           architecture: "mosque,islamic architecture,minaret,dome",
-          calligraphy: "arabic calligraphy,islamic art,geometric",
+          calligraphy: "arabic calligraphy,islamic art",
           geometric: "islamic pattern,geometric,mandala,symmetry",
         };
 
@@ -205,22 +205,10 @@ function App() {
     dispatch(setBackgroundLastRefreshTime(Date.now()));
   };
 
-  useEffect(() => {
-    // Always fetch background on initial load to ensure uploaded images are used
-    fetchBackground();
-  }, []);
-
-  // Watch for changes in background settings and refresh accordingly
+  // Single effect to handle all background fetching logic
   useEffect(() => {
     fetchBackground();
-  }, [imageSource, islamicCategory]);
-
-  // Separate effect to watch for uploaded images changes
-  useEffect(() => {
-    if (imageSource === "upload") {
-      fetchBackground();
-    }
-  }, [uploadedImages.length, imageSource]);
+  }, [imageSource, islamicCategory, uploadedImages.length]);
 
   // Set up interval for timed refreshes (not for "newtab" mode)
   useEffect(() => {

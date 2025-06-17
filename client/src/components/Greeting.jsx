@@ -67,12 +67,22 @@ const Greeting = ({ name = "Friend" }) => {
             color: "white",
             fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
             userSelect: "none",
-            minHeight: "3rem",
-            lineHeight: 1.2,
+            minHeight: "3rem", // Allow natural height expansion
+            lineHeight: 1.3,
             textAlign: "center",
+            px: 2,
+            // Strong text shadow for visibility on any background
+            textShadow: `
+              3px 3px 6px rgba(0, 0, 0, 0.9),
+              -2px -2px 4px rgba(0, 0, 0, 0.8),
+              2px -2px 4px rgba(0, 0, 0, 0.8),
+              -2px 2px 4px rgba(0, 0, 0, 0.8),
+              0px 0px 8px rgba(0, 0, 0, 0.7)
+            `,
+            // Allow text to wrap naturally
             wordWrap: "break-word",
+            overflowWrap: "break-word",
             hyphens: "auto",
-            px: 2, // Add horizontal padding
           }}
         >
           {messages[messageIndex](name)}

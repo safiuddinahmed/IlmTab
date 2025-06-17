@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -19,6 +19,8 @@ import {
   AddCircleOutline,
 } from "@mui/icons-material";
 
+const TASKS_STORAGE_KEY = "ilmtab_tasks";
+
 const ToDoList = () => {
   const [tasks, setTasks] = useState([]);
   const [input, setInput] = useState("");
@@ -26,6 +28,28 @@ const ToDoList = () => {
   const [showAll, setShowAll] = useState(false); // controls showing all tasks or only 3 inside panel
   const [editId, setEditId] = useState(null);
   const [editText, setEditText] = useState("");
+
+  // Load tasks from localStorage on component mount
+  useEffect(() => {
+    try {
+      const savedTasks = localStorage.getItem(TASKS_STORAGE_KEY);
+      if (savedTasks) {
+        const parsedTasks = JSON.parse(savedTasks);
+        setTasks(parsedTasks);
+      }
+    } catch (error) {
+      console.error("Error loading tasks from localStorage:", error);
+    }
+  }, []);
+
+  // Save tasks to localStorage whenever tasks change
+  useEffect(() => {
+    try {
+      localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
+    } catch (error) {
+      console.error("Error saving tasks to localStorage:", error);
+    }
+  }, [tasks]);
 
   const visibleTasks = showAll ? tasks : tasks.slice(0, 3);
   const completedCount = tasks.filter((t) => t.done).length;
@@ -160,8 +184,18 @@ const ToDoList = () => {
                     fullWidth
                     value={editText}
                     onChange={(e) => setEditText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        saveEdit();
+                      } else if (e.key === "Escape") {
+                        setEditId(null);
+                        setEditText("");
+                      }
+                    }}
                     onBlur={saveEdit}
                     size="small"
+                    autoFocus
                   />
                 ) : (
                   <ListItemText
