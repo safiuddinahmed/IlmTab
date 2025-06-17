@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "IlmTab",
+  "version": "0.1.0",
+  "description": "Transform your new tab into a spiritual sanctuary with daily Quranic verses, authentic Hadith, and Islamic productivity tools. Stay connected to your faith with every browser session.",
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "icons": {
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}

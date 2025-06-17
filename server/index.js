@@ -11,7 +11,23 @@ import hadithRoutes from './routes/hadith.js';
 const app = express();
 
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:4000'
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Allow localhost origins
+    if (origin.includes('localhost')) return callback(null, true);
+    
+    // Allow Chrome extension origins
+    if (origin.startsWith('chrome-extension://')) return callback(null, true);
+    
+    // Allow the configured CORS origin
+    if (origin === (process.env.CORS_ORIGIN || 'http://localhost:5173')) {
+      return callback(null, true);
+    }
+    
+    return callback(new Error('Not allowed by CORS'));
+  }
 }));
 app.use(express.json());
 
