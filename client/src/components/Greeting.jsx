@@ -67,10 +67,13 @@ const Greeting = ({ name = "Friend" }) => {
             color: "white",
             fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
             userSelect: "none",
-            minHeight: "3rem", // Allow natural height expansion
+            height: "6rem", // Fixed height to prevent layout shifts
             lineHeight: 1.3,
             textAlign: "center",
             px: 2,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             // Strong text shadow for visibility on any background
             textShadow: `
               3px 3px 6px rgba(0, 0, 0, 0.9),

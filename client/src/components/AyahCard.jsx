@@ -44,6 +44,7 @@ const AyahCard = ({
         },
         animation: `${fadeIn} 0.6s ease forwards`,
         overflow: "visible",
+        minHeight: "400px", // Reserve minimum space to prevent layout shifts
       }}
     >
       <Box

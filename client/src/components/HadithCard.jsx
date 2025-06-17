@@ -79,6 +79,7 @@ const HadithCard = ({
           boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
         },
         animation: `${fadeIn} 0.6s ease forwards`,
+        minHeight: "450px", // Reserve minimum space to prevent layout shifts
       }}
     >
       <Box

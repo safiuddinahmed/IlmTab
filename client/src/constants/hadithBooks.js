@@ -57,25 +57,6 @@ export const hadithBooks = [
     hadithsCount: 6293,
     chaptersCount: 29,
   },
-  {
-    id: 9,
-    name: "Musnad Ahmad",
-    writer: "Imam Ahmad ibn Hanbal",
-    slug: "musnad-ahmad",
-    hadithsCount: 0,
-    chaptersCount: 14,
-  },
-  {
-    id: 10,
-    name: "Al-Silsila Sahiha",
-    writer: "Allama Muhammad Nasir Uddin Al-Bani",
-    slug: "al-silsila-sahiha",
-    aboutWriter:
-      "Al-Albani was an Albanian Islamic scholar, reformer and revivalist. Among the most prominent figures of Salafism, Al-Albani is widely regarded as one of the most significant Islamic scholars of the 20th century.",
-    writerDeath: "October 2, 1999",
-    hadithsCount: 0,
-    chaptersCount: 28,
-  },
 ];
 
 export default hadithBooks;

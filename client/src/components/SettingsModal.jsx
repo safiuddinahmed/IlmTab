@@ -472,8 +472,8 @@ export default function SettingsModal({ open, onClose }) {
   const tabData = [
     { label: "Quran", icon: <MenuBookIcon /> },
     { label: "Hadith", icon: <AutoStoriesIcon /> },
-    { label: "Time & Weather", icon: <ScheduleIcon /> },
     { label: "Background", icon: <WallpaperIcon /> },
+    { label: "Time & Weather", icon: <ScheduleIcon /> },
     { label: "Greetings", icon: <PersonIcon /> },
     { label: "Tasks", icon: <AssignmentIcon /> },
   ];
@@ -590,75 +590,6 @@ export default function SettingsModal({ open, onClose }) {
                 {/* Quran Tab */}
                 {localTabIndex === 0 && (
                   <Box>
-                    <StyledPaper
-                      title="Tafsir Settings"
-                      icon={<DescriptionIcon />}
-                    >
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ mb: 3 }}
-                      >
-                        Choose your preferred language and commentary for deeper
-                        understanding of Quranic verses.
-                      </Typography>
-
-                      <StyledFormControl>
-                        <InputLabel>Tafsir Language</InputLabel>
-                        <Select
-                          value={tafsirLang}
-                          onChange={handleLangChange}
-                          label="Tafsir Language"
-                        >
-                          {Object.keys(tafsirsByLanguage).map((lang) => {
-                            const languageMap = {
-                              english: { flag: "gb", name: "English" },
-                              bengali: { flag: "bd", name: "Bengali" },
-                              arabic: { flag: "sa", name: "Arabic" },
-                              russian: { flag: "ru", name: "Russian" },
-                              urdu: { flag: "pk", name: "Urdu" },
-                              kurdish: { flag: "iq", name: "Kurdish" },
-                            };
-                            const langInfo = languageMap[lang] || {
-                              flag: null,
-                              name:
-                                lang.charAt(0).toUpperCase() + lang.slice(1),
-                            };
-                            return (
-                              <MenuItem key={lang} value={lang}>
-                                <Box display="flex" alignItems="center" gap={1}>
-                                  {langInfo.flag && (
-                                    <Flag
-                                      countryCode={langInfo.flag}
-                                      size="small"
-                                    />
-                                  )}
-                                  <Typography>{langInfo.name}</Typography>
-                                </Box>
-                              </MenuItem>
-                            );
-                          })}
-                        </Select>
-                      </StyledFormControl>
-
-                      <StyledFormControl>
-                        <InputLabel>Tafsir Commentary</InputLabel>
-                        <Select
-                          value={selectedTafsirId}
-                          onChange={handleTafsirChange}
-                          label="Tafsir Commentary"
-                        >
-                          {(tafsirsByLanguage[tafsirLang] || []).map(
-                            (tafsir) => (
-                              <MenuItem key={tafsir.id} value={tafsir.id}>
-                                {tafsir.name}
-                              </MenuItem>
-                            )
-                          )}
-                        </Select>
-                      </StyledFormControl>
-                    </StyledPaper>
-
                     <StyledPaper title="Text Edition" icon={<MenuBookIcon />}>
                       <Typography
                         variant="body2"
@@ -760,6 +691,75 @@ export default function SettingsModal({ open, onClose }) {
                         </Select>
                       </StyledFormControl>
                     </StyledPaper>
+
+                    <StyledPaper
+                      title="Tafsir Settings"
+                      icon={<DescriptionIcon />}
+                    >
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mb: 3 }}
+                      >
+                        Choose your preferred language and commentary for deeper
+                        understanding of Quranic verses.
+                      </Typography>
+
+                      <StyledFormControl>
+                        <InputLabel>Tafsir Language</InputLabel>
+                        <Select
+                          value={tafsirLang}
+                          onChange={handleLangChange}
+                          label="Tafsir Language"
+                        >
+                          {Object.keys(tafsirsByLanguage).map((lang) => {
+                            const languageMap = {
+                              english: { flag: "gb", name: "English" },
+                              bengali: { flag: "bd", name: "Bengali" },
+                              arabic: { flag: "sa", name: "Arabic" },
+                              russian: { flag: "ru", name: "Russian" },
+                              urdu: { flag: "pk", name: "Urdu" },
+                              kurdish: { flag: "iq", name: "Kurdish" },
+                            };
+                            const langInfo = languageMap[lang] || {
+                              flag: null,
+                              name:
+                                lang.charAt(0).toUpperCase() + lang.slice(1),
+                            };
+                            return (
+                              <MenuItem key={lang} value={lang}>
+                                <Box display="flex" alignItems="center" gap={1}>
+                                  {langInfo.flag && (
+                                    <Flag
+                                      countryCode={langInfo.flag}
+                                      size="small"
+                                    />
+                                  )}
+                                  <Typography>{langInfo.name}</Typography>
+                                </Box>
+                              </MenuItem>
+                            );
+                          })}
+                        </Select>
+                      </StyledFormControl>
+
+                      <StyledFormControl>
+                        <InputLabel>Tafsir Commentary</InputLabel>
+                        <Select
+                          value={selectedTafsirId}
+                          onChange={handleTafsirChange}
+                          label="Tafsir Commentary"
+                        >
+                          {(tafsirsByLanguage[tafsirLang] || []).map(
+                            (tafsir) => (
+                              <MenuItem key={tafsir.id} value={tafsir.id}>
+                                {tafsir.name}
+                              </MenuItem>
+                            )
+                          )}
+                        </Select>
+                      </StyledFormControl>
+                    </StyledPaper>
                   </Box>
                 )}
 
@@ -836,164 +836,8 @@ export default function SettingsModal({ open, onClose }) {
                   </Box>
                 )}
 
-                {/* Time & Weather Tab */}
-                {localTabIndex === 2 && (
-                  <Box>
-                    <ToggleCard
-                      title="Weather & Time Display"
-                      description="Show current weather conditions and time information"
-                      checked={weatherEnabled}
-                      onChange={(checked) =>
-                        dispatch(setWeatherEnabled(checked))
-                      }
-                      icon={<ScheduleIcon />}
-                    />
-
-                    {weatherEnabled && (
-                      <>
-                        <StyledPaper
-                          title="Location Settings"
-                          icon={<LocationOnIcon />}
-                        >
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{ mb: 3 }}
-                          >
-                            Set your location to get accurate weather
-                            information and local time.
-                          </Typography>
-
-                          <Box display="flex" gap={2} alignItems="flex-end">
-                            <StyledTextField
-                              label="Search City"
-                              value={citySearch}
-                              onChange={(e) => setCitySearch(e.target.value)}
-                              onKeyPress={(e) => {
-                                if (e.key === "Enter") {
-                                  handleCitySearch();
-                                }
-                              }}
-                              placeholder="Enter city name..."
-                              sx={{ flex: 1 }}
-                            />
-                            <IconButton
-                              onClick={handleCitySearch}
-                              sx={{
-                                mb: 0.25,
-                                bgcolor: "primary.main",
-                                color: "white",
-                                "&:hover": { bgcolor: "primary.dark" },
-                              }}
-                            >
-                              <LocationOnIcon />
-                            </IconButton>
-                          </Box>
-
-                          {cityOptions.length > 0 && (
-                            <StyledFormControl>
-                              <InputLabel>Select Location</InputLabel>
-                              <Select
-                                value={selectedCityIndex}
-                                onChange={(e) => {
-                                  const index = e.target.value;
-                                  setSelectedCityIndex(index);
-                                  const selectedCity = cityOptions[index];
-                                  if (selectedCity) {
-                                    dispatch(setLocation(selectedCity));
-                                    setCitySearch(
-                                      `${selectedCity.name}, ${selectedCity.country}`
-                                    );
-                                  }
-                                }}
-                                label="Select Location"
-                              >
-                                {cityOptions.map((city, index) => (
-                                  <MenuItem key={index} value={index}>
-                                    <Box>
-                                      <Typography
-                                        variant="body1"
-                                        sx={{ fontWeight: 500 }}
-                                      >
-                                        {city.name}
-                                      </Typography>
-                                      <Typography
-                                        variant="caption"
-                                        color="text.secondary"
-                                      >
-                                        {city.admin1 && `${city.admin1}, `}
-                                        {city.country}
-                                        {city.population &&
-                                          ` • ${city.population.toLocaleString()} people`}
-                                      </Typography>
-                                    </Box>
-                                  </MenuItem>
-                                ))}
-                              </Select>
-                            </StyledFormControl>
-                          )}
-
-                          <StyledTextField
-                            label="Custom Display Name"
-                            value={customDisplayName}
-                            onChange={(e) =>
-                              dispatch(setCustomLocationName(e.target.value))
-                            }
-                            onKeyPress={(e) => {
-                              if (e.key === "Enter") {
-                                e.target.blur();
-                              }
-                            }}
-                            placeholder="Optional custom name for your location"
-                            helperText="Leave empty to use the default city name"
-                          />
-                        </StyledPaper>
-
-                        <StyledPaper
-                          title="Display Preferences"
-                          icon={<AccessTimeIcon />}
-                        >
-                          <StyledFormControl>
-                            <InputLabel>Time Format</InputLabel>
-                            <Select
-                              value={timeFormat}
-                              onChange={(e) =>
-                                dispatch(setTimeFormat(e.target.value))
-                              }
-                              label="Time Format"
-                            >
-                              <MenuItem value="12h">
-                                🕐 12-hour (AM/PM)
-                              </MenuItem>
-                              <MenuItem value="24h">🕐 24-hour</MenuItem>
-                            </Select>
-                          </StyledFormControl>
-
-                          <StyledFormControl>
-                            <InputLabel>Temperature Unit</InputLabel>
-                            <Select
-                              value={tempUnit}
-                              onChange={(e) =>
-                                dispatch(setTemperatureUnit(e.target.value))
-                              }
-                              label="Temperature Unit"
-                            >
-                              <MenuItem value="celsius">
-                                🌡️ Celsius (°C)
-                              </MenuItem>
-                              <MenuItem value="fahrenheit">
-                                🌡️ Fahrenheit (°F)
-                              </MenuItem>
-                            </Select>
-                          </StyledFormControl>
-                        </StyledPaper>
-                      </>
-                    )}
-                  </Box>
-                )}
-
                 {/* Background Tab */}
-                {localTabIndex === 3 && (
+                {localTabIndex === 2 && (
                   <Box>
                     <StyledPaper title="Image Source" icon={<WallpaperIcon />}>
                       <Typography
@@ -1265,6 +1109,162 @@ export default function SettingsModal({ open, onClose }) {
                         helperText="This image will be displayed when other sources fail"
                       />
                     </StyledPaper>
+                  </Box>
+                )}
+
+                {/* Time & Weather Tab */}
+                {localTabIndex === 3 && (
+                  <Box>
+                    <ToggleCard
+                      title="Weather & Time Display"
+                      description="Show current weather conditions and time information"
+                      checked={weatherEnabled}
+                      onChange={(checked) =>
+                        dispatch(setWeatherEnabled(checked))
+                      }
+                      icon={<ScheduleIcon />}
+                    />
+
+                    {weatherEnabled && (
+                      <>
+                        <StyledPaper
+                          title="Location Settings"
+                          icon={<LocationOnIcon />}
+                        >
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ mb: 3 }}
+                          >
+                            Set your location to get accurate weather
+                            information and local time.
+                          </Typography>
+
+                          <Box display="flex" gap={2} alignItems="flex-end">
+                            <StyledTextField
+                              label="Search City"
+                              value={citySearch}
+                              onChange={(e) => setCitySearch(e.target.value)}
+                              onKeyPress={(e) => {
+                                if (e.key === "Enter") {
+                                  handleCitySearch();
+                                }
+                              }}
+                              placeholder="Enter city name..."
+                              sx={{ flex: 1 }}
+                            />
+                            <IconButton
+                              onClick={handleCitySearch}
+                              sx={{
+                                mb: 0.25,
+                                bgcolor: "primary.main",
+                                color: "white",
+                                "&:hover": { bgcolor: "primary.dark" },
+                              }}
+                            >
+                              <LocationOnIcon />
+                            </IconButton>
+                          </Box>
+
+                          {cityOptions.length > 0 && (
+                            <StyledFormControl>
+                              <InputLabel>Select Location</InputLabel>
+                              <Select
+                                value={selectedCityIndex}
+                                onChange={(e) => {
+                                  const index = e.target.value;
+                                  setSelectedCityIndex(index);
+                                  const selectedCity = cityOptions[index];
+                                  if (selectedCity) {
+                                    dispatch(setLocation(selectedCity));
+                                    setCitySearch(
+                                      `${selectedCity.name}, ${selectedCity.country}`
+                                    );
+                                  }
+                                }}
+                                label="Select Location"
+                              >
+                                {cityOptions.map((city, index) => (
+                                  <MenuItem key={index} value={index}>
+                                    <Box>
+                                      <Typography
+                                        variant="body1"
+                                        sx={{ fontWeight: 500 }}
+                                      >
+                                        {city.name}
+                                      </Typography>
+                                      <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                      >
+                                        {city.admin1 && `${city.admin1}, `}
+                                        {city.country}
+                                        {city.population &&
+                                          ` • ${city.population.toLocaleString()} people`}
+                                      </Typography>
+                                    </Box>
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </StyledFormControl>
+                          )}
+
+                          <StyledTextField
+                            label="Custom Display Name"
+                            value={customDisplayName}
+                            onChange={(e) =>
+                              dispatch(setCustomLocationName(e.target.value))
+                            }
+                            onKeyPress={(e) => {
+                              if (e.key === "Enter") {
+                                e.target.blur();
+                              }
+                            }}
+                            placeholder="Optional custom name for your location"
+                            helperText="Leave empty to use the default city name"
+                          />
+                        </StyledPaper>
+
+                        <StyledPaper
+                          title="Display Preferences"
+                          icon={<AccessTimeIcon />}
+                        >
+                          <StyledFormControl>
+                            <InputLabel>Time Format</InputLabel>
+                            <Select
+                              value={timeFormat}
+                              onChange={(e) =>
+                                dispatch(setTimeFormat(e.target.value))
+                              }
+                              label="Time Format"
+                            >
+                              <MenuItem value="12h">
+                                🕐 12-hour (AM/PM)
+                              </MenuItem>
+                              <MenuItem value="24h">🕐 24-hour</MenuItem>
+                            </Select>
+                          </StyledFormControl>
+
+                          <StyledFormControl>
+                            <InputLabel>Temperature Unit</InputLabel>
+                            <Select
+                              value={tempUnit}
+                              onChange={(e) =>
+                                dispatch(setTemperatureUnit(e.target.value))
+                              }
+                              label="Temperature Unit"
+                            >
+                              <MenuItem value="celsius">
+                                🌡️ Celsius (°C)
+                              </MenuItem>
+                              <MenuItem value="fahrenheit">
+                                🌡️ Fahrenheit (°F)
+                              </MenuItem>
+                            </Select>
+                          </StyledFormControl>
+                        </StyledPaper>
+                      </>
+                    )}
                   </Box>
                 )}
 
