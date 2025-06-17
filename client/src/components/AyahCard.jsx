@@ -50,7 +50,7 @@ const AyahCard = ({
       <Box
         sx={{
           background: `linear-gradient(90deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
-          borderRadius: "4px 4px 0 0",
+          borderRadius: "8px 8px 0 0",
           padding: "12px 20px", // reduced padding (from 16px 24px)
           display: "flex",
           alignItems: "center",
