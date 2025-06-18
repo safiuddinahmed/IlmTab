@@ -43,6 +43,20 @@ const QuranSearch = ({ onSelectAyah, onClose }) => {
   const [resultCount, setResultCount] = useState(0);
   const [hasSearched, setHasSearched] = useState(false);
 
+  // Reset search state when query changes
+  const handleQueryChange = (e) => {
+    const newQuery = e.target.value;
+    setSearchQuery(newQuery);
+
+    // Reset search state when query is cleared or changed
+    if (newQuery.trim() === "") {
+      setHasSearched(false);
+      setSearchResults([]);
+      setResultCount(0);
+      setError(null);
+    }
+  };
+
   // Use IndexedDB context instead of Redux
   const { settings, favorites } = useIndexedDBContext();
 
@@ -243,7 +257,7 @@ const QuranSearch = ({ onSelectAyah, onClose }) => {
               fullWidth
               placeholder="Search for keywords in the Quran..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleQueryChange}
               onKeyPress={handleKeyPress}
               InputProps={{
                 endAdornment: (
@@ -291,14 +305,10 @@ const QuranSearch = ({ onSelectAyah, onClose }) => {
             </FormControl>
 
             {/* Result Count */}
-            {searchQuery && !loading && hasSearched && (
+            {!loading && hasSearched && searchResults.length > 0 && (
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Typography variant="caption" color="text.secondary">
-                  {resultCount > 0
-                    ? `${resultCount} result${
-                        resultCount !== 1 ? "s" : ""
-                      } found`
-                    : "No results found"}
+                  {resultCount} result{resultCount !== 1 ? "s" : ""} found
                 </Typography>
               </Box>
             )}

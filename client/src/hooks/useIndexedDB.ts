@@ -231,14 +231,20 @@ export const useIndexedDBTasks = () => {
   // Add task with optimistic update
   const addTask = useCallback(async (task: { text: string; done?: boolean }) => {
     try {
-      // Create task object - Dexie will auto-generate the id
-      const taskData: Omit<IlmTabTask, 'id'> = {
+      // Generate a unique ID for the task (since schema uses 'id, done' not '++id, done')
+      const existingTasks = await db.tasks.toArray();
+      const maxId = existingTasks.length > 0 ? Math.max(...existingTasks.map(t => t.id)) : 0;
+      const newId = maxId + 1;
+      
+      // Create task object with manual ID
+      const taskData: IlmTabTask = {
+        id: newId,
         text: task.text,
         done: task.done ?? false
       };
       
-      // Add to IndexedDB (id will be auto-generated)
-      const id = await db.tasks.add(taskData as any);
+      // Add to IndexedDB
+      await db.tasks.add(taskData);
       
       // Update state with real data
       await loadTasks();

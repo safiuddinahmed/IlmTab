@@ -160,7 +160,6 @@ export class IlmTabDatabase extends Dexie {
     });
 
     // Future versions can be added here:
-    // this.version(3).stores({...}).upgrade(tx => {...});
     // this.version(4).stores({...}).upgrade(tx => {...});
   }
 }
