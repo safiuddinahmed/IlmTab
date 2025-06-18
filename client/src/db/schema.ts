@@ -137,17 +137,8 @@ export class IlmTabDatabase extends Dexie {
 
   constructor() {
     super('IlmTabDatabase');
-    
-    // Version 1: Initial schema (December 2024)
-    this.version(1).stores({
-      settings: 'id',
-      favorites: 'id, type, surahNumber, ayahNumber, book, hadithNumber, dateAdded, *tags',
-      tasks: 'id, done',
-      cachedContent: 'id, type, dateAdded, expiresAt',
-      cachedImages: 'id, originalUrl, dateAdded, expiresAt'
-    });
 
-    // Version 2: Enhanced image upload support (June 2025)
+    // Version 1: Initial Schema (June 2025)
     this.version(2).stores({
       settings: 'id',
       favorites: 'id, type, surahNumber, ayahNumber, book, hadithNumber, dateAdded, *tags',

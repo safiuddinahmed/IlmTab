@@ -76,6 +76,7 @@ function App() {
   const {
     currentImage,
     loading: imageLoading,
+    placeholderUrl,
     cacheInfo,
   } = useRotatingImageCache();
 
@@ -124,7 +125,14 @@ function App() {
       setPhotoAuthorName("Your Upload");
       setPhotoAuthorLink("#");
     } else if (imageSource === "category" && currentImage) {
-      // Use rotating cache image
+      // Use rotating cache image with instant placeholder feedback
+      if (placeholderUrl && !backgroundUrl) {
+        // Show blur placeholder immediately for instant feedback
+        setBackgroundUrl(placeholderUrl);
+        console.log("🖼️ Showing blur placeholder for instant feedback");
+      }
+
+      // Then load the optimized image
       const optimizedUrl = buildOptimizedImageUrl(currentImage.url);
       setBackgroundUrl(optimizedUrl);
       setPhotoAuthorName(currentImage.authorName);
@@ -144,7 +152,13 @@ function App() {
       setPhotoAuthorName("Fallback Image");
       setPhotoAuthorLink("#");
     }
-  }, [currentImage, imageSource, uploadedImages, currentUploadedImageIndex]);
+  }, [
+    currentImage,
+    placeholderUrl,
+    imageSource,
+    uploadedImages,
+    currentUploadedImageIndex,
+  ]);
 
   const fetchAyah = async (surah = null, ayah = null) => {
     try {

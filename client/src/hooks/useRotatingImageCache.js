@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useIndexedDBContext } from '../contexts/IndexedDBContext';
-import { buildOptimizedImageUrl } from '../utils/imageOptimization';
+import { buildOptimizedImageUrl, buildPlaceholderUrl } from '../utils/imageOptimization';
 import axios from 'axios';
 
 const ACCESS_KEY = "CmH0hk3YgDGkNbMvPBhbNL8n23lQwrNnrneWYr-lVlc";
@@ -13,7 +13,9 @@ export const useRotatingImageCache = () => {
   const { settings } = useIndexedDBContext();
   const [currentImage, setCurrentImage] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [placeholderUrl, setPlaceholderUrl] = useState(null);
   const fetchingRef = useRef(false);
+  const preloadRef = useRef(null);
 
   // Get current settings
   const currentSettings = settings?.settings || {};
@@ -242,6 +244,49 @@ export const useRotatingImageCache = () => {
     }
   };
 
+  // Progressive loading with blur placeholder
+  useEffect(() => {
+    if (currentImage?.url) {
+      // Show blur placeholder immediately
+      const placeholder = buildPlaceholderUrl(currentImage.url);
+      if (placeholder) {
+        setPlaceholderUrl(placeholder);
+        console.log('🖼️ Showing blur placeholder for instant feedback');
+      }
+    }
+  }, [currentImage]);
+
+  // Preload next image (Tabliss-style optimization)
+  useEffect(() => {
+    if (imageCache.images.length > 0) {
+      const nextIndex = (imageCache.currentIndex + 1) % imageCache.images.length;
+      const nextImage = imageCache.images[nextIndex];
+      
+      if (nextImage && nextImage.url) {
+        // Cancel previous preload
+        if (preloadRef.current) {
+          preloadRef.current.onload = null;
+          preloadRef.current.onerror = null;
+        }
+        
+        // Preload next image
+        preloadRef.current = new Image();
+        const optimizedUrl = buildOptimizedImageUrl(nextImage.url);
+        
+        preloadRef.current.onload = () => {
+          console.log('✅ Preloaded next image:', nextImage.id);
+        };
+        
+        preloadRef.current.onerror = () => {
+          console.log('❌ Failed to preload next image:', nextImage.id);
+        };
+        
+        preloadRef.current.src = optimizedUrl;
+        console.log('🔄 Preloading next image:', nextImage.id);
+      }
+    }
+  }, [imageCache.currentIndex, imageCache.images]);
+
   // Initialize cache when component mounts or category changes
   useEffect(() => {
     if (settings?.settings && imageSource === 'category') {
@@ -252,6 +297,7 @@ export const useRotatingImageCache = () => {
   return {
     currentImage,
     loading,
+    placeholderUrl,
     cacheInfo: {
       totalImages: imageCache.images.length,
       currentIndex: imageCache.currentIndex,
