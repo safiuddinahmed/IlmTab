@@ -27,6 +27,7 @@ export interface IlmTabSettings {
       admin1: string;
       latitude: number;
       longitude: number;
+      timezone?: string;
     };
     customName: string;
     timeFormat: string;
@@ -139,7 +140,7 @@ export class IlmTabDatabase extends Dexie {
     super('IlmTabDatabase');
 
     // Version 1: Initial Schema (June 2025)
-    this.version(2).stores({
+    this.version(1).stores({
       settings: 'id',
       favorites: 'id, type, surahNumber, ayahNumber, book, hadithNumber, dateAdded, *tags',
       tasks: 'id, done',
@@ -197,6 +198,7 @@ export const defaultSettings: IlmTabSettings = {
       admin1: "Ontario",
       latitude: 43.65107,
       longitude: -79.347015,
+      timezone: "America/Toronto",
     },
     customName: "",
     timeFormat: "12h",
