@@ -35,7 +35,7 @@ export const useRotatingImageCache = () => {
     console.log('🔄 Fetching images for category:', category);
     
     // In development, use single optimized static image to avoid API usage
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'developments') {
       console.log('🔧 Development mode: Using single static image');
       const devImageRaw = "https://images.unsplash.com/photo-1506744038136-46273834b3fb";
       
@@ -167,31 +167,36 @@ export const useRotatingImageCache = () => {
         
         console.log('🔄 Rotating cache from index', currentIndex, 'to', nextIndex);
         
-        // Check if we need to prefetch more images (when reaching 4th image)
-        const shouldPrefetch = nextIndex === 3 && imageCache.images.length === 5;
+        // Check if we need to prefetch more images (when reaching near end)
+        const shouldPrefetch = nextIndex >= imageCache.images.length - 2; // Prefetch when 2 images left
         
         if (shouldPrefetch) {
-          console.log('� Prefetching more images...');
+          console.log('🔄 Prefetching more images to extend cache...');
           const newImages = await fetchImages(islamicCategory);
           
-          // Replace cache with new images, keep current image visible
+          // Tabliss-style: Keep last few images + append new ones (no waste!)
+          const keepLastImages = imageCache.images.slice(-3); // Keep last 3 images
+          const extendedImages = [...keepLastImages, ...newImages];
+          
           const updatedCache = {
-            images: newImages,
-            currentIndex: 0, // Reset to first of new batch
+            images: extendedImages,
+            currentIndex: nextIndex >= imageCache.images.length - 1 ? 3 : nextIndex, // Continue smoothly
             lastFetchTime: Date.now(),
             category: islamicCategory
           };
+
+          console.log(`✅ Extended cache: ${imageCache.images.length} → ${extendedImages.length} images (no waste!)`);
 
           settings?.updateSettings({
             background: {
               ...backgroundSettings,
               imageCache: updatedCache,
-              currentImageUrl: buildOptimizedImageUrl(newImages[0]?.url),
+              currentImageUrl: buildOptimizedImageUrl(extendedImages[updatedCache.currentIndex]?.url),
               lastRefreshTime: Date.now()
             }
           });
 
-          setCurrentImage(newImages[0]);
+          setCurrentImage(extendedImages[updatedCache.currentIndex]);
         } else {
           // Just rotate to next image
           const nextImage = imageCache.images[nextIndex];
