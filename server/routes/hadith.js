@@ -1,5 +1,6 @@
 import express from 'express';
 import fetch from 'node-fetch';
+import hadithList from '../data/hadith.js';
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ const HADITH_BOOKS = [
 const DEFAULT_BOOK = 'sahih-bukhari';
 const HADITH_API_KEY = "$2y$10$J1BiN6U0xUa2Hp42HdsZgOcvVwc8lOPvEKEgdhqG7F1dsXjPbjka";
 
-// Lightweight fetch function with timeout (no caching for browser extension)
+// Lightweight fetch function with timeout and fallback (no caching for browser extension)
 const fetchHadithData = async (book, hadithNumber) => {
   // Simple timeout wrapper
   const fetchWithTimeout = (url, timeout = 10000) => {
@@ -31,44 +32,51 @@ const fetchHadithData = async (book, hadithNumber) => {
     ]);
   };
   
-  const url = `https://hadithapi.com/api/hadiths/?apiKey=${HADITH_API_KEY}&hadithNumber=${hadithNumber}&book=${book}&status=Sahih`;
-  
-  const response = await fetchWithTimeout(url);
-  const json = await response.json();
+  // Try primary API first (hadithapi.com)
+  try {
+    const url = `https://hadithapi.com/api/hadiths/?apiKey=${HADITH_API_KEY}&hadithNumber=${hadithNumber}&book=${book}&status=Sahih`;
+    
+    const response = await fetchWithTimeout(url);
+    const json = await response.json();
 
-  if (!response.ok || !json.hadiths?.data?.[0]) {
-    throw new Error('Failed to fetch hadith');
+    if (response.ok && json.hadiths?.data?.[0]) {
+      const hadith = json.hadiths.data[0];
+      return {
+        number: hadith.hadithNumber,
+        book: hadith.book.bookName,
+        volume: hadith.volume,
+        writer: hadith.book.writerName,
+        bookSlug: hadith.bookSlug,
+        narrator: {
+          english: hadith.englishNarrator,
+          urdu: hadith.urduNarrator
+        },
+        text: {
+          english: hadith.hadithEnglish,
+          urdu: hadith.hadithUrdu,
+          arabic: hadith.hadithArabic
+        },
+        heading: {
+          english: hadith.headingEnglish,
+          urdu: hadith.headingUrdu,
+          arabic: hadith.headingArabic
+        },
+        chapter: {
+          chapterNumber: hadith.chapter.chapterNumber,
+          english: hadith.chapter.chapterEnglish,
+          urdu: hadith.chapter.chapterUrdu,
+          arabic: hadith.chapter.chapterArabic
+        },
+        status: hadith.status
+      };
+    }
+  } catch (error) {
+    console.log('Primary Hadith API failed, using fallback...', error.message);
   }
 
-  const hadith = json.hadiths.data[0];
-  return {
-    number: hadith.hadithNumber,
-    book: hadith.book.bookName,
-    volume: hadith.volume,
-    writer: hadith.book.writerName,
-    bookSlug: hadith.bookSlug,
-    narrator: {
-      english: hadith.englishNarrator,
-      urdu: hadith.urduNarrator
-    },
-    text: {
-      english: hadith.hadithEnglish,
-      urdu: hadith.hadithUrdu,
-      arabic: hadith.hadithArabic
-    },
-    heading: {
-      english: hadith.headingEnglish,
-      urdu: hadith.headingUrdu,
-      arabic: hadith.headingArabic
-    },
-    chapter: {
-      chapterNumber: hadith.chapter.chapterNumber,
-      english: hadith.chapter.chapterEnglish,
-      urdu: hadith.chapter.chapterUrdu,
-      arabic: hadith.chapter.chapterArabic
-    },
-    status: hadith.status
-  };
+  // Fallback - return a random hadith from our curated list
+  const randomIndex = Math.floor(Math.random() * hadithList.length);
+  return hadithList[randomIndex];
 };
 
 router.get('/', async (req, res) => {

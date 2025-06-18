@@ -225,11 +225,11 @@
   perspective: 1000px;
 }
 
-/* Page Load Staggered Animations */
+/* Page Load Staggered Animations - Optimized for Browser Extension */
 @keyframes pageLoadFadeInUp {
   from {
     opacity: 0;
-    transform: translate3d(0, 30px, 0) scale3d(0.95, 0.95, 1);
+    transform: translate3d(0, 15px, 0) scale3d(0.98, 0.98, 1);
   }
   to {
     opacity: 1;
@@ -246,59 +246,59 @@
   }
 }
 
-/* Page load staggered entrance classes */
+/* Page load staggered entrance classes - Fast for browser extension */
 .page-load-background {
   opacity: 0;
-  animation: pageLoadBackgroundFade 1s ease-out forwards;
+  animation: pageLoadBackgroundFade 0.2s ease-out forwards;
   animation-delay: 0ms;
   will-change: opacity;
 }
 
 .page-load-stagger-1 {
   opacity: 0;
-  transform: translate3d(0, 30px, 0) scale3d(0.95, 0.95, 1);
-  animation: pageLoadFadeInUp 0.6s ease-out forwards;
-  animation-delay: 200ms;
+  transform: translate3d(0, 15px, 0) scale3d(0.98, 0.98, 1);
+  animation: pageLoadFadeInUp 0.2s ease-out forwards;
+  animation-delay: 50ms;
   will-change: opacity, transform;
 }
 
 .page-load-stagger-2 {
   opacity: 0;
-  transform: translate3d(0, 30px, 0) scale3d(0.95, 0.95, 1);
-  animation: pageLoadFadeInUp 0.6s ease-out forwards;
-  animation-delay: 400ms;
+  transform: translate3d(0, 15px, 0) scale3d(0.98, 0.98, 1);
+  animation: pageLoadFadeInUp 0.2s ease-out forwards;
+  animation-delay: 100ms;
   will-change: opacity, transform;
 }
 
 .page-load-stagger-3 {
   opacity: 0;
-  transform: translate3d(0, 30px, 0) scale3d(0.95, 0.95, 1);
-  animation: pageLoadFadeInUp 0.6s ease-out forwards;
-  animation-delay: 600ms;
+  transform: translate3d(0, 15px, 0) scale3d(0.98, 0.98, 1);
+  animation: pageLoadFadeInUp 0.2s ease-out forwards;
+  animation-delay: 150ms;
   will-change: opacity, transform;
 }
 
 .page-load-stagger-4 {
   opacity: 0;
-  transform: translate3d(0, 30px, 0) scale3d(0.95, 0.95, 1);
-  animation: pageLoadFadeInUp 0.6s ease-out forwards;
-  animation-delay: 800ms;
+  transform: translate3d(0, 15px, 0) scale3d(0.98, 0.98, 1);
+  animation: pageLoadFadeInUp 0.2s ease-out forwards;
+  animation-delay: 200ms;
   will-change: opacity, transform;
 }
 
 .page-load-stagger-5 {
   opacity: 0;
-  transform: translate3d(0, 30px, 0) scale3d(0.95, 0.95, 1);
-  animation: pageLoadFadeInUp 0.6s ease-out forwards;
-  animation-delay: 1000ms;
+  transform: translate3d(0, 15px, 0) scale3d(0.98, 0.98, 1);
+  animation: pageLoadFadeInUp 0.2s ease-out forwards;
+  animation-delay: 250ms;
   will-change: opacity, transform;
 }
 
 .page-load-stagger-6 {
   opacity: 0;
-  transform: translate3d(0, 30px, 0) scale3d(0.95, 0.95, 1);
-  animation: pageLoadFadeInUp 0.6s ease-out forwards;
-  animation-delay: 1200ms;
+  transform: translate3d(0, 15px, 0) scale3d(0.98, 0.98, 1);
+  animation: pageLoadFadeInUp 0.2s ease-out forwards;
+  animation-delay: 300ms;
   will-change: opacity, transform;
 }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -19,77 +19,58 @@ import {
   Save,
   AddCircleOutline,
 } from "@mui/icons-material";
-
-const TASKS_STORAGE_KEY = "ilmtab_tasks";
+import { useIndexedDBContext } from "../contexts/IndexedDBContext";
 
 const ToDoList = () => {
-  const [tasks, setTasks] = useState([]);
+  const { tasks } = useIndexedDBContext();
   const [input, setInput] = useState("");
   const [expanded, setExpanded] = useState(false); // controls showing the whole panel
   const [showAll, setShowAll] = useState(false); // controls showing all tasks or only 3 inside panel
   const [editId, setEditId] = useState(null);
   const [editText, setEditText] = useState("");
 
-  // Load tasks from localStorage on component mount
-  useEffect(() => {
-    try {
-      const savedTasks = localStorage.getItem(TASKS_STORAGE_KEY);
-      if (savedTasks) {
-        const parsedTasks = JSON.parse(savedTasks);
-        setTasks(parsedTasks);
-      }
-    } catch (error) {
-      console.error("Error loading tasks from localStorage:", error);
-    }
-  }, []);
+  // Get tasks from IndexedDB context
+  const taskList = tasks?.tasks || [];
+  const visibleTasks = showAll ? taskList : taskList.slice(0, 3);
+  const completedCount = taskList.filter((t) => t.done).length;
 
-  // Save tasks to localStorage whenever tasks change
-  useEffect(() => {
-    try {
-      localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
-    } catch (error) {
-      console.error("Error saving tasks to localStorage:", error);
-    }
-  }, [tasks]);
-
-  const visibleTasks = showAll ? tasks : tasks.slice(0, 3);
-  const completedCount = tasks.filter((t) => t.done).length;
-
-  // Add, toggleDone, delete, editing methods remain unchanged
-
-  const addTask = () => {
+  const addTask = useCallback(() => {
     if (!input.trim()) return;
-    setTasks([...tasks, { id: Date.now(), text: input.trim(), done: false }]);
+    tasks?.addTask({
+      text: input.trim(),
+      done: false,
+    });
     setInput("");
-  };
+  }, [input, tasks]);
 
-  const toggleDone = (id) => {
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === id ? { ...task, done: !task.done } : task
-      )
-    );
-  };
+  const toggleDone = useCallback(
+    (id) => {
+      const task = taskList.find((t) => t.id === id);
+      if (task) {
+        tasks?.updateTask(id, { done: !task.done });
+      }
+    },
+    [taskList, tasks]
+  );
 
-  const deleteTask = (id) => {
-    setTasks((prev) => prev.filter((task) => task.id !== id));
-  };
+  const deleteTask = useCallback(
+    (id) => {
+      tasks?.deleteTask(id);
+    },
+    [tasks]
+  );
 
-  const startEditing = (id, text) => {
+  const startEditing = useCallback((id, text) => {
     setEditId(id);
     setEditText(text);
-  };
+  }, []);
 
-  const saveEdit = () => {
+  const saveEdit = useCallback(() => {
     if (!editText.trim()) return;
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === editId ? { ...task, text: editText.trim() } : task
-      )
-    );
+    tasks?.updateTask(editId, { text: editText.trim() });
     setEditId(null);
     setEditText("");
-  };
+  }, [editText, editId, tasks]);
 
   return (
     <Box
@@ -127,7 +108,7 @@ const ToDoList = () => {
           variant="subtitle1"
           sx={{ fontWeight: 600, color: "black", fontSize: "1rem" }}
         >
-          Your Tasks ({completedCount}/{tasks.length})
+          Your Tasks ({completedCount}/{taskList.length})
         </Typography>
         {expanded ? <ExpandLess /> : <ExpandMore />}
       </Box>
@@ -166,7 +147,7 @@ const ToDoList = () => {
           {/* Tasks list */}
           <List dense>
             {/* Always show first 3 tasks */}
-            {tasks.slice(0, 3).map(({ id, text, done }) => (
+            {taskList.slice(0, 3).map(({ id, text, done }) => (
               <ListItem
                 key={id}
                 sx={{
@@ -230,7 +211,7 @@ const ToDoList = () => {
             {/* Collapsible additional tasks */}
             <Collapse in={showAll} timeout={300}>
               <Box className="expand-enter">
-                {tasks.slice(3).map(({ id, text, done }) => (
+                {taskList.slice(3).map(({ id, text, done }) => (
                   <ListItem
                     key={id}
                     sx={{
@@ -295,7 +276,7 @@ const ToDoList = () => {
           </List>
 
           {/* Show more / less toggle if tasks > 3 */}
-          {tasks.length > 3 && (
+          {taskList.length > 3 && (
             <Box textAlign="center" mt={1}>
               <IconButton
                 onClick={() => setShowAll((prev) => !prev)}

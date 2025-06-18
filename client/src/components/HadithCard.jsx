@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
 import {
   Card,
   CardContent,
@@ -19,7 +18,7 @@ import {
   FavoriteBorder,
 } from "@mui/icons-material";
 import Loop from "@mui/icons-material/Loop";
-import { addFavorite, removeFavorite } from "../redux/favoritesSlice";
+import { useIndexedDBContext } from "../contexts/IndexedDBContext";
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px);}
@@ -35,18 +34,71 @@ const HadithCard = ({
   onFavorite,
 }) => {
   const theme = useTheme();
-  const dispatch = useDispatch();
-  const favorites = useSelector((state) => state.favorites.items);
+
+  // Use IndexedDB context instead of Redux
+  const { favorites, settings } = useIndexedDBContext();
+
+  // State for formatted hadith data based on translation language
+  const [formattedHadith, setFormattedHadith] = useState({
+    text: hadith.text?.english || "",
+    narrator: hadith.narrator?.english || "",
+    heading: hadith.heading?.english || "",
+    chapter: hadith.chapter?.english || "",
+    arabicText: hadith.text?.arabic || "",
+    number: hadith.number || "",
+    book: hadith.book || "",
+    status: hadith.status || "",
+  });
+
+  // Simple language switching - update formatted hadith when hadith data or settings change
+  useEffect(() => {
+    const translationLanguage =
+      settings?.settings?.hadith?.translationLanguage || "en";
+
+    console.log(
+      "🔄 Updating hadith format with language:",
+      translationLanguage
+    );
+
+    // Simple language selection logic
+    const getTextByLanguage = (textObj) => {
+      if (!textObj) return "";
+
+      switch (translationLanguage) {
+        case "ur":
+        case "urdu":
+          return textObj.urdu || textObj.english || "";
+        case "en":
+        case "english":
+        default:
+          return textObj.english || textObj.urdu || "";
+      }
+    };
+
+    setFormattedHadith({
+      text: getTextByLanguage(hadith.text),
+      narrator: getTextByLanguage(hadith.narrator),
+      heading: getTextByLanguage(hadith.heading),
+      chapter: getTextByLanguage(hadith.chapter),
+      arabicText: hadith.text?.arabic || "",
+      number: hadith.number || "",
+      book: hadith.book || "",
+      status: hadith.status || "",
+    });
+
+    console.log("✅ Hadith formatted for language:", translationLanguage);
+  }, [hadith, settings?.settings?.hadith?.translationLanguage]);
 
   // Compose a unique ID for this hadith favorite
   const favoriteId = `hadith-${hadith.bookSlug}-${hadith.number}`;
 
   // Check if this hadith is favorited
-  const isFavorited = favorites.some((fav) => fav.id === favoriteId);
+  const isFavorited =
+    favorites?.favorites?.some((fav) => fav.id === favoriteId) || false;
 
   const handleFavoriteClick = () => {
     if (isFavorited) {
-      dispatch(removeFavorite(favoriteId));
+      favorites?.removeFavorite(favoriteId);
     } else {
       // Create favorite object to store
       const favoriteObject = {
@@ -58,7 +110,7 @@ const HadithCard = ({
         englishText: hadith.text.english || "",
         note: "",
       };
-      dispatch(addFavorite(favoriteObject));
+      favorites?.addFavorite(favoriteObject);
     }
     // Remove the onFavorite callback call to prevent duplicates
   };
@@ -106,21 +158,18 @@ const HadithCard = ({
               marginLeft: 1,
             }}
           >
-            - Chapter {hadith.chapter.chapterNumber}: {hadith.chapter.english}
+            - Chapter {hadith.chapter.chapterNumber}: {formattedHadith.chapter}
           </Typography>
         </Box>
         <Chip
           label={hadith.status}
-          color={hadith.status === "Sahih" ? "success" : "warning"}
+          color="success"
           size="small"
           sx={{
             fontWeight: 700,
             letterSpacing: "0.06em",
             textTransform: "uppercase",
-            backgroundColor:
-              hadith.status === "Sahih"
-                ? theme.palette.success.main
-                : theme.palette.warning.main,
+            backgroundColor: theme.palette.success.main,
             color: "#fff",
             fontSize: "0.75rem",
           }}
@@ -133,7 +182,7 @@ const HadithCard = ({
           textAlign="center"
           sx={{ fontWeight: 500, marginBottom: 1 }}
         >
-          {hadith.narrator.english}
+          {formattedHadith.narrator}
         </Typography>
 
         <Box
@@ -150,7 +199,7 @@ const HadithCard = ({
           }}
           textAlign="center"
         >
-          {hadith.text.arabic}
+          {formattedHadith.arabicText}
         </Box>
 
         <Divider sx={{ marginBottom: 2 }} />
@@ -166,7 +215,7 @@ const HadithCard = ({
             lineHeight: 1.5,
           }}
         >
-          {hadith.text.english}
+          {formattedHadith.text}
         </Typography>
 
         <Typography

@@ -1,5 +1,4 @@
 import React, { useRef, useState, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
 import {
   Box,
   IconButton,
@@ -24,7 +23,7 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import TafsirModal from "./TafsirModal"; // Adjust path if needed
 import MenuBookIcon from "@mui/icons-material/MenuBook";
-import { addFavorite, removeFavorite } from "../redux/favoritesSlice";
+import { useIndexedDBContext } from "../contexts/IndexedDBContext";
 
 const formatTime = (seconds) => {
   const mins = Math.floor(seconds / 60);
@@ -49,18 +48,19 @@ const AudioPlayer = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [showTafsir, setShowTafsir] = useState(false);
 
-  const dispatch = useDispatch();
-  const favorites = useSelector((state) => state.favorites.items);
+  // Use IndexedDB context instead of Redux
+  const { favorites } = useIndexedDBContext();
 
   // Compose a unique ID for this ayah favorite
   const favoriteId = `ayah-${ayah.surah.number}-${ayah.surah.ayahNumberInSurah}`;
 
   // Check if this ayah is favorited
-  const isFavorited = favorites.some((fav) => fav.id === favoriteId);
+  const isFavorited =
+    favorites?.favorites?.some((fav) => fav.id === favoriteId) || false;
 
   const toggleFavorite = () => {
     if (isFavorited) {
-      dispatch(removeFavorite(favoriteId));
+      favorites?.removeFavorite(favoriteId);
     } else {
       // Create favorite object to store
       const favoriteObject = {
@@ -74,7 +74,7 @@ const AudioPlayer = ({
         surahName: ayah.surah.englishNameTranslation,
         surahArabicName: ayah.surah.name,
       };
-      dispatch(addFavorite(favoriteObject));
+      favorites?.addFavorite(favoriteObject);
     }
     // Remove the onFavorite callback call to prevent duplicates
   };

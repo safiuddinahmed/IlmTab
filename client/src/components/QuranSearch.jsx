@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   TextField,
@@ -30,9 +30,7 @@ import {
   Favorite as FavoriteIcon,
   FavoriteBorder as FavoriteBorderIcon,
 } from "@mui/icons-material";
-import { useSelector, useDispatch } from "react-redux";
-import { addFavorite, removeFavorite } from "../redux/favoritesSlice";
-import { setSearchTranslationEdition } from "../redux/settingsSlice";
+import { useIndexedDBContext } from "../contexts/IndexedDBContext";
 import QuranSearchSkeleton from "./skeletons/QuranSearchSkeleton";
 import axios from "axios";
 
@@ -45,15 +43,13 @@ const QuranSearch = ({ onSelectAyah, onClose }) => {
   const [resultCount, setResultCount] = useState(0);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const dispatch = useDispatch();
+  // Use IndexedDB context instead of Redux
+  const { settings, favorites } = useIndexedDBContext();
 
-  // Get search translation edition from Redux
-  const searchTranslationEdition = useSelector(
-    (state) => state.settings.search.translationEdition
-  );
-
-  // Get favorites from Redux
-  const favorites = useSelector((state) => state.favorites.items);
+  // Get search translation edition from IndexedDB
+  const searchSettings = settings?.settings?.search || {};
+  const searchTranslationEdition =
+    searchSettings.translationEdition || "en.asad";
 
   // Available English editions for search
   const availableEditions = [
@@ -63,7 +59,7 @@ const QuranSearch = ({ onSelectAyah, onClose }) => {
     { identifier: "en.sahih", name: "Saheeh International" },
   ];
 
-  // Current selected edition from Redux (persisted)
+  // Current selected edition from IndexedDB (persisted)
   const selectedEdition = searchTranslationEdition;
 
   const handleSearch = async () => {
@@ -150,7 +146,7 @@ const QuranSearch = ({ onSelectAyah, onClose }) => {
   // Check if an ayah is favorited
   const isFavorited = (surahNumber, ayahNumber) => {
     const favoriteId = `ayah-${surahNumber}-${ayahNumber}`;
-    return favorites.some((fav) => fav.id === favoriteId);
+    return favorites?.favorites?.some((fav) => fav.id === favoriteId) || false;
   };
 
   // Toggle favorite status
@@ -160,7 +156,7 @@ const QuranSearch = ({ onSelectAyah, onClose }) => {
     const favoriteId = `ayah-${result.surahNumber}-${result.ayahNumber}`;
 
     if (isFavorited(result.surahNumber, result.ayahNumber)) {
-      dispatch(removeFavorite(favoriteId));
+      favorites?.removeFavorite(favoriteId);
     } else {
       // Create favorite object to store
       const favoriteObject = {
@@ -174,8 +170,21 @@ const QuranSearch = ({ onSelectAyah, onClose }) => {
         surahName: result.surahName,
         surahArabicName: result.surahArabicName,
       };
-      dispatch(addFavorite(favoriteObject));
+      favorites?.addFavorite(favoriteObject);
     }
+  };
+
+  // Handle translation edition change
+  const handleTranslationChange = (newEdition) => {
+    // Update search settings in IndexedDB
+    const currentSettings = settings?.settings || {};
+    settings?.updateSettings({
+      ...currentSettings,
+      search: {
+        ...currentSettings.search,
+        translationEdition: newEdition,
+      },
+    });
   };
 
   return (
@@ -263,9 +272,7 @@ const QuranSearch = ({ onSelectAyah, onClose }) => {
               <Select
                 value={selectedEdition}
                 label="Translation"
-                onChange={(e) =>
-                  dispatch(setSearchTranslationEdition(e.target.value))
-                }
+                onChange={(e) => handleTranslationChange(e.target.value)}
                 sx={{ borderRadius: 2 }}
                 MenuProps={{
                   PaperProps: {
@@ -357,14 +364,8 @@ const QuranSearch = ({ onSelectAyah, onClose }) => {
                               onClick={(e) => toggleFavorite(result, e)}
                               sx={{
                                 ml: 1,
-                                color: isFavorited(
-                                  result.surahNumber,
-                                  result.ayahNumber
-                                )
-                                  ? "red"
-                                  : "text.secondary",
                                 "&:hover": {
-                                  color: "red",
+                                  color: "error.main",
                                 },
                               }}
                             >
@@ -372,9 +373,12 @@ const QuranSearch = ({ onSelectAyah, onClose }) => {
                                 result.surahNumber,
                                 result.ayahNumber
                               ) ? (
-                                <FavoriteIcon fontSize="small" />
+                                <FavoriteIcon fontSize="small" color="error" />
                               ) : (
-                                <FavoriteBorderIcon fontSize="small" />
+                                <FavoriteBorderIcon
+                                  fontSize="small"
+                                  color="action"
+                                />
                               )}
                             </IconButton>
                           </Box>

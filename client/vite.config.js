@@ -22,8 +22,6 @@ export default defineConfig({
           vendor: ['react', 'react-dom'],
           // Material-UI chunk (large library)
           mui: ['@mui/material', '@mui/icons-material'],
-          // Redux chunk
-          redux: ['@reduxjs/toolkit', 'react-redux'],
           // Utilities chunk
           utils: ['axios', 'dayjs']
         }
@@ -68,10 +66,9 @@ export default defineConfig({
       'react-dom',
       '@mui/material',
       '@mui/icons-material',
-      '@reduxjs/toolkit',
-      'react-redux',
       'axios',
-      'dayjs'
+      'dayjs',
+      'dexie'
     ]
   }
 })

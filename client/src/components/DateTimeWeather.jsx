@@ -6,7 +6,7 @@ import CloudIcon from "@mui/icons-material/Cloud";
 import GrainIcon from "@mui/icons-material/Grain";
 import ThunderstormIcon from "@mui/icons-material/Thunderstorm";
 import AcUnitIcon from "@mui/icons-material/AcUnit";
-import { useSelector, useDispatch } from "react-redux";
+import { useIndexedDBContext } from "../contexts/IndexedDBContext";
 
 const weatherCodes = {
   0: "sun",
@@ -96,9 +96,20 @@ const getWeatherIcon = (code) => {
 };
 
 const DateTimeWeather = () => {
-  const { location, customName, timeFormat, temperatureUnit } = useSelector(
-    (state) => state.settings.weather
-  );
+  // Use IndexedDB context instead of Redux
+  const { settings } = useIndexedDBContext();
+
+  // Get weather settings from IndexedDB
+  const weatherSettings = settings?.settings?.weather || {};
+  const location = weatherSettings.location || {
+    latitude: 0,
+    longitude: 0,
+    name: "Unknown",
+    timezone: "UTC",
+  };
+  const customName = weatherSettings.customName || "";
+  const timeFormat = weatherSettings.timeFormat || "24h";
+  const temperatureUnit = weatherSettings.temperatureUnit || "celsius";
 
   const [weather, setWeather] = useState(null);
   const [loadingWeather, setLoadingWeather] = useState(true);

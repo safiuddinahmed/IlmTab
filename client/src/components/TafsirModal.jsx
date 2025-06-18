@@ -1,4 +1,3 @@
-// TafsirModal.jsx
 import React, { useEffect, useState } from "react";
 import {
   Dialog,
@@ -10,14 +9,18 @@ import {
   Box,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { useSelector } from "react-redux";
+import { useIndexedDBContext } from "../contexts/IndexedDBContext";
 import { tafsirsByLanguage } from "../constants/tafsirsByLanguage";
 import TafsirModalSkeleton from "./skeletons/TafsirModalSkeleton";
 
 const TafsirModal = ({ open, onClose, surah, ayah }) => {
-  const tafsirId = useSelector((state) => state.settings.ayah.tafsirId) || 169;
-  const tafsirLanguage =
-    useSelector((state) => state.settings.ayah.tafsirLanguage) || "english";
+  // Use IndexedDB context instead of Redux
+  const { settings } = useIndexedDBContext();
+
+  // Get tafsir settings from IndexedDB
+  const ayahSettings = settings?.settings?.ayah || {};
+  const tafsirId = ayahSettings.tafsirId || 169;
+  const tafsirLanguage = ayahSettings.tafsirLanguage || "english";
 
   const [loading, setLoading] = useState(true);
   const [tafsir, setTafsir] = useState(null);

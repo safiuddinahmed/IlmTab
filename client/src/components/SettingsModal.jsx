@@ -37,32 +37,7 @@ import { textEditions } from "../constants/textEditions";
 import { audioEditions } from "../constants/audioEditions";
 import { hadithBooks } from "../constants/hadithBooks";
 import Flag from "./Flag";
-import { useSelector, useDispatch } from "react-redux";
-import {
-  setTafsirLanguage,
-  setTafsirId,
-  setTextEditionLanguage,
-  setTextEditionIdentifier,
-  setAudioEdition,
-  setWeatherEnabled,
-  setLocation,
-  setCustomLocationName,
-  setTimeFormat,
-  setTemperatureUnit,
-  setHadithBook,
-  setHadithTranslationLanguage,
-  setGreetingsEnabled,
-  setName,
-  setTasksEnabled,
-  setBackgroundRefreshInterval,
-  setBackgroundFallbackImageUrl,
-  setBackgroundImageSource,
-  setBackgroundIslamicCategory,
-  addBackgroundUploadedImage,
-  removeBackgroundUploadedImage,
-  setBackgroundBlurIntensity,
-  setBackgroundOpacity,
-} from "../redux/settingsSlice";
+import { useIndexedDBContext } from "../contexts/IndexedDBContext";
 
 // Enhanced styled components
 const StyledPaper = ({ children, title, icon, ...props }) => (
@@ -232,79 +207,140 @@ const ToggleCard = ({ title, description, checked, onChange, icon }) => (
 );
 
 export default function SettingsModal({ open, onClose }) {
-  const dispatch = useDispatch();
+  // Use IndexedDB context instead of Redux
+  const { settings } = useIndexedDBContext();
   const [localTabIndex, setLocalTabIndex] = React.useState(0);
 
-  // Get values from the Redux state
-  const tafsirLang = useSelector((state) => state.settings.ayah.tafsirLanguage);
-  const selectedTafsirId = useSelector((state) => state.settings.ayah.tafsirId);
-  const textEditionLanguage = useSelector(
-    (state) => state.settings.ayah.textEdition.language
-  );
-  const textEditionIdentifier = useSelector(
-    (state) => state.settings.ayah.textEdition.identifier
-  );
+  // Get values from IndexedDB settings
+  const currentSettings = settings?.settings || {};
 
-  const audioEditionIdentifier = useSelector(
-    (state) => state.settings.ayah.audioEdition.identifier
-  );
-  const audioEditionEnglishName = useSelector(
-    (state) => state.settings.ayah.audioEdition.englishName
-  );
+  // Ayah settings
+  const ayahSettings = currentSettings.ayah || {};
+  const tafsirLang = ayahSettings.tafsirLanguage || "english";
+  const selectedTafsirId = ayahSettings.tafsirId || 169;
+  const textEditionLanguage = ayahSettings.textEdition?.language || "en";
+  const textEditionIdentifier =
+    ayahSettings.textEdition?.identifier || "en.asad";
+  const audioEditionIdentifier =
+    ayahSettings.audioEdition?.identifier || "ar.alafasy";
+  const audioEditionEnglishName =
+    ayahSettings.audioEdition?.englishName || "Mishary Rashid Alafasy";
 
-  const handleLangChange = (e) => {
-    const lang = e.target.value;
-    dispatch(setTafsirLanguage(lang));
+  // Weather settings
+  const weatherSettings = currentSettings.weather || {};
+  const weatherEnabled = weatherSettings.enabled || false;
+  const customDisplayName = weatherSettings.customName || "";
+  const timeFormat = weatherSettings.timeFormat || "24h";
+  const tempUnit = weatherSettings.temperatureUnit || "celsius";
 
-    const firstTafsir = tafsirsByLanguage[lang]?.[0];
-    if (firstTafsir) {
-      dispatch(setTafsirId(firstTafsir.id));
-    }
-  };
+  // Hadith settings
+  const hadithSettings = currentSettings.hadith || {};
 
-  const handleTafsirChange = (e) => {
-    dispatch(setTafsirId(e.target.value));
-  };
+  // Greetings settings
+  const greetingsSettings = currentSettings.greetings || {};
+  const greetingsEnabled = greetingsSettings.enabled || false;
+  const greetingsName = greetingsSettings.name || "";
 
-  const handleTextEditionLanguageChange = (e) => {
-    const lang = e.target.value;
-    dispatch(setTextEditionLanguage(lang));
+  // Tasks settings
+  const tasksSettings = currentSettings.tasks || {};
+  const tasksEnabled = tasksSettings.enabled || false;
 
-    const firstEdition = textEditions[lang]?.[0];
-    if (firstEdition) {
-      dispatch(setTextEditionIdentifier(firstEdition.identifier));
-    }
-  };
+  // Background settings
+  const backgroundSettings = currentSettings.background || {};
+  const backgroundRefreshInterval =
+    backgroundSettings.refreshInterval || "newtab";
+  const backgroundFallbackImageUrl = backgroundSettings.fallbackImageUrl || "";
+  const backgroundImageSource = backgroundSettings.imageSource || "category";
+  const backgroundIslamicCategory =
+    backgroundSettings.islamicCategory || "nature";
+  const backgroundUploadedImages = backgroundSettings.uploadedImages || [];
+  const backgroundBlurIntensity = backgroundSettings.blurIntensity || 0;
+  const backgroundOpacity = backgroundSettings.opacity || 100;
 
-  const handleTextEditionChange = (e) => {
-    dispatch(setTextEditionIdentifier(e.target.value));
-  };
-
-  const handleAudioEditionChange = (e) => {
-    const selected = audioEditions.find((a) => a.identifier === e.target.value);
-    if (selected) {
-      dispatch(
-        setAudioEdition({
-          identifier: selected.identifier,
-          englishName: selected.englishName,
-        })
-      );
-    }
-  };
-
-  const weatherEnabled = useSelector((state) => state.settings.weather.enabled);
+  // City search state
   const [citySearch, setCitySearch] = React.useState("");
   const [cityOptions, setCityOptions] = React.useState([]);
   const [selectedCityIndex, setSelectedCityIndex] = React.useState(0);
+  const [nameError, setNameError] = React.useState("");
 
-  const customDisplayName = useSelector(
-    (state) => state.settings.weather.customName
-  );
-  const timeFormat = useSelector((state) => state.settings.weather.timeFormat);
-  const tempUnit = useSelector(
-    (state) => state.settings.weather.temperatureUnit
-  );
+  // Helper function to update settings
+  const updateSettings = (newSettings) => {
+    settings?.updateSettings({
+      ...currentSettings,
+      ...newSettings,
+    });
+  };
 
+  // Tafsir handlers
+  const handleLangChange = (e) => {
+    const lang = e.target.value;
+    const firstTafsir = tafsirsByLanguage[lang]?.[0];
+
+    updateSettings({
+      ayah: {
+        ...ayahSettings,
+        tafsirLanguage: lang,
+        tafsirId: firstTafsir ? firstTafsir.id : ayahSettings.tafsirId,
+      },
+    });
+  };
+
+  const handleTafsirChange = (e) => {
+    updateSettings({
+      ayah: {
+        ...ayahSettings,
+        tafsirId: e.target.value,
+      },
+    });
+  };
+
+  // Text edition handlers
+  const handleTextEditionLanguageChange = (e) => {
+    const lang = e.target.value;
+    const firstEdition = textEditions[lang]?.[0];
+
+    updateSettings({
+      ayah: {
+        ...ayahSettings,
+        textEdition: {
+          language: lang,
+          identifier: firstEdition
+            ? firstEdition.identifier
+            : ayahSettings.textEdition?.identifier,
+        },
+      },
+    });
+  };
+
+  const handleTextEditionChange = (e) => {
+    updateSettings({
+      ayah: {
+        ...ayahSettings,
+        textEdition: {
+          ...ayahSettings.textEdition,
+          identifier: e.target.value,
+        },
+      },
+    });
+  };
+
+  // Audio edition handler
+  const handleAudioEditionChange = (e) => {
+    const selected = audioEditions.find((a) => a.identifier === e.target.value);
+    if (selected) {
+      updateSettings({
+        ayah: {
+          ...ayahSettings,
+          audioEdition: {
+            identifier: selected.identifier,
+            englishName: selected.englishName,
+          },
+        },
+      });
+    }
+  };
+
+  // Weather handlers
   const handleCitySearch = async () => {
     if (!citySearch.trim()) return;
     try {
@@ -317,7 +353,12 @@ export default function SettingsModal({ open, onClose }) {
       setCityOptions(data.results || []);
       setSelectedCityIndex(0);
       if (data.results?.[0]) {
-        dispatch(setLocation(data.results[0]));
+        updateSettings({
+          weather: {
+            ...weatherSettings,
+            location: data.results[0],
+          },
+        });
         setCitySearch(`${data.results[0].name}, ${data.results[0].country}`);
       }
     } catch (err) {
@@ -325,42 +366,17 @@ export default function SettingsModal({ open, onClose }) {
     }
   };
 
-  const hadithSettings = useSelector((state) => state.settings.hadith);
-
+  // Hadith handler
   const handleHadithBookChange = (e) => {
-    dispatch(setHadithBook(e.target.value));
+    updateSettings({
+      hadith: {
+        ...hadithSettings,
+        book: e.target.value,
+      },
+    });
   };
 
-  const greetingsEnabled = useSelector(
-    (state) => state.settings.greetings.enabled
-  );
-  const greetingsName = useSelector((state) => state.settings.greetings.name);
-
-  const tasksEnabled = useSelector((state) => state.settings.tasks.enabled);
-
-  // Background settings
-  const backgroundRefreshInterval = useSelector(
-    (state) => state.settings.background?.refreshInterval || "newtab"
-  );
-  const backgroundFallbackImageUrl = useSelector(
-    (state) => state.settings.background?.fallbackImageUrl || ""
-  );
-  const backgroundImageSource = useSelector(
-    (state) => state.settings.background?.imageSource || "category"
-  );
-  const backgroundIslamicCategory = useSelector(
-    (state) => state.settings.background?.islamicCategory || "nature"
-  );
-  const backgroundUploadedImages = useSelector(
-    (state) => state.settings.background?.uploadedImages || []
-  );
-  const backgroundBlurIntensity = useSelector(
-    (state) => state.settings.background?.blurIntensity || 0
-  );
-  const backgroundOpacity = useSelector(
-    (state) => state.settings.background?.opacity || 100
-  );
-
+  // Image compression function
   const compressImage = (file, maxWidth = 1920, quality = 0.8) => {
     return new Promise((resolve) => {
       const canvas = document.createElement("canvas");
@@ -395,6 +411,7 @@ export default function SettingsModal({ open, onClose }) {
     });
   };
 
+  // Image upload handler
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
     console.log(
@@ -429,10 +446,21 @@ export default function SettingsModal({ open, onClose }) {
           return;
         }
 
-        console.log("File compressed, dispatching addBackgroundUploadedImage");
-        dispatch(addBackgroundUploadedImage(compressedDataUrl));
-        console.log("Dispatching setBackgroundImageSource to upload");
-        dispatch(setBackgroundImageSource("upload"));
+        console.log("File compressed, adding to uploaded images");
+        const newImage = {
+          id: Date.now().toString(),
+          url: compressedDataUrl,
+          name: file.name,
+        };
+
+        updateSettings({
+          background: {
+            ...backgroundSettings,
+            uploadedImages: [...backgroundUploadedImages, newImage],
+            imageSource: "upload",
+          },
+        });
+
         // Reset the input to allow uploading the same file again
         event.target.value = "";
       } catch (error) {
@@ -450,8 +478,7 @@ export default function SettingsModal({ open, onClose }) {
     }
   };
 
-  const [nameError, setNameError] = React.useState("");
-
+  // Name change handler
   const handleNameChange = (e) => {
     const input = e.target.value.trimStart();
     if (input.length > 30) {
@@ -462,7 +489,12 @@ export default function SettingsModal({ open, onClose }) {
       setNameError("");
     }
 
-    dispatch(setName(input));
+    updateSettings({
+      greetings: {
+        ...greetingsSettings,
+        name: input,
+      },
+    });
   };
 
   const tabData = [
@@ -616,12 +648,12 @@ export default function SettingsModal({ open, onClose }) {
                         color="text.secondary"
                         sx={{ mb: 3 }}
                       >
-                        Select your preferred translation and text format for
+                        Select your preferred translation and language for
                         Quranic verses.
                       </Typography>
 
                       <StyledFormControl>
-                        <InputLabel>Text Language</InputLabel>
+                        <InputLabel>Translation Language</InputLabel>
                         <Select
                           value={textEditionLanguage}
                           onChange={handleTextEditionLanguageChange}
@@ -660,7 +692,7 @@ export default function SettingsModal({ open, onClose }) {
                       </StyledFormControl>
 
                       <StyledFormControl>
-                        <InputLabel>Translation</InputLabel>
+                        <InputLabel>Translation By</InputLabel>
                         <Select
                           value={textEditionIdentifier}
                           onChange={handleTextEditionChange}
@@ -773,7 +805,7 @@ export default function SettingsModal({ open, onClose }) {
                           {(tafsirsByLanguage[tafsirLang] || []).map(
                             (tafsir) => (
                               <MenuItem key={tafsir.id} value={tafsir.id}>
-                                {tafsir.name}
+                                {tafsir.author_name}
                               </MenuItem>
                             )
                           )}
@@ -802,7 +834,7 @@ export default function SettingsModal({ open, onClose }) {
                       <StyledFormControl>
                         <InputLabel>Hadith Book</InputLabel>
                         <Select
-                          value={hadithSettings.book}
+                          value={hadithSettings.book || "sahih-bukhari"}
                           onChange={handleHadithBookChange}
                           label="Hadith Book"
                         >
@@ -830,11 +862,14 @@ export default function SettingsModal({ open, onClose }) {
                       <StyledFormControl>
                         <InputLabel>Translation Language</InputLabel>
                         <Select
-                          value={hadithSettings.translationLanguage}
+                          value={hadithSettings.translationLanguage || "en"}
                           onChange={(e) =>
-                            dispatch(
-                              setHadithTranslationLanguage(e.target.value)
-                            )
+                            updateSettings({
+                              hadith: {
+                                ...hadithSettings,
+                                translationLanguage: e.target.value,
+                              },
+                            })
                           }
                           label="Translation Language"
                         >
@@ -875,11 +910,16 @@ export default function SettingsModal({ open, onClose }) {
                         <Select
                           value={backgroundImageSource}
                           onChange={(e) =>
-                            dispatch(setBackgroundImageSource(e.target.value))
+                            updateSettings({
+                              background: {
+                                ...backgroundSettings,
+                                imageSource: e.target.value,
+                              },
+                            })
                           }
                           label="Image Source"
                         >
-                          <MenuItem value="category">🕌 Unplash</MenuItem>
+                          <MenuItem value="category">🕌 Unsplash</MenuItem>
                           <MenuItem value="upload">📁 Upload Your Own</MenuItem>
                         </Select>
                       </StyledFormControl>
@@ -890,9 +930,12 @@ export default function SettingsModal({ open, onClose }) {
                           <Select
                             value={backgroundIslamicCategory}
                             onChange={(e) =>
-                              dispatch(
-                                setBackgroundIslamicCategory(e.target.value)
-                              )
+                              updateSettings({
+                                background: {
+                                  ...backgroundSettings,
+                                  islamicCategory: e.target.value,
+                                },
+                              })
                             }
                             label="Islamic Category"
                           >
@@ -999,11 +1042,15 @@ export default function SettingsModal({ open, onClose }) {
                                     <IconButton
                                       size="small"
                                       onClick={() =>
-                                        dispatch(
-                                          removeBackgroundUploadedImage(
-                                            image.id
-                                          )
-                                        )
+                                        updateSettings({
+                                          background: {
+                                            ...backgroundSettings,
+                                            uploadedImages:
+                                              backgroundUploadedImages.filter(
+                                                (img) => img.id !== image.id
+                                              ),
+                                          },
+                                        })
                                       }
                                       sx={{
                                         position: "absolute",
@@ -1085,9 +1132,12 @@ export default function SettingsModal({ open, onClose }) {
                         <Select
                           value={backgroundRefreshInterval}
                           onChange={(e) =>
-                            dispatch(
-                              setBackgroundRefreshInterval(e.target.value)
-                            )
+                            updateSettings({
+                              background: {
+                                ...backgroundSettings,
+                                refreshInterval: e.target.value,
+                              },
+                            })
                           }
                           label="Refresh Interval"
                         >
@@ -1102,33 +1152,67 @@ export default function SettingsModal({ open, onClose }) {
                       </StyledFormControl>
                     </StyledPaper>
 
-                    <StyledPaper title="Fallback Image" icon={<ImageIcon />}>
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ mb: 3 }}
+                    {/* Fallback Image Status - Only show when fallback is being used */}
+                    {backgroundSettings?.isUsingFallback && (
+                      <StyledPaper
+                        title="Fallback Image Status"
+                        icon={<ImageIcon />}
                       >
-                        Set a backup image URL for when other sources are
-                        unavailable.
-                      </Typography>
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ mb: 3 }}
+                        >
+                          Currently using fallback image because other sources
+                          are unavailable.
+                        </Typography>
 
-                      <StyledTextField
-                        label="Fallback Image URL"
-                        value={backgroundFallbackImageUrl}
-                        onChange={(e) =>
-                          dispatch(
-                            setBackgroundFallbackImageUrl(e.target.value)
-                          )
-                        }
-                        onKeyPress={(e) => {
-                          if (e.key === "Enter") {
-                            e.target.blur();
-                          }
-                        }}
-                        placeholder="https://example.com/beautiful-image.jpg"
-                        helperText="This image will be displayed when other sources fail"
-                      />
-                    </StyledPaper>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            p: 2,
+                            bgcolor: "rgba(255, 193, 7, 0.04)",
+                            borderRadius: 2,
+                            border: "1px solid rgba(255, 193, 7, 0.2)",
+                          }}
+                        >
+                          <Box
+                            component="img"
+                            src={
+                              backgroundSettings?.currentImageUrl ||
+                              "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=300&q=80"
+                            }
+                            alt="Current fallback image"
+                            sx={{
+                              width: 150,
+                              height: 100,
+                              objectFit: "cover",
+                              borderRadius: 2,
+                              mb: 2,
+                              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                            }}
+                          />
+                          <Typography
+                            variant="body2"
+                            color="warning.main"
+                            sx={{ fontWeight: 500, textAlign: "center" }}
+                          >
+                            ⚠️ Fallback image in use
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ textAlign: "center", mt: 0.5 }}
+                          >
+                            {backgroundImageSource === "category"
+                              ? "Unsplash API unavailable"
+                              : "No uploaded images available"}
+                          </Typography>
+                        </Box>
+                      </StyledPaper>
+                    )}
                   </Box>
                 )}
 
@@ -1140,7 +1224,12 @@ export default function SettingsModal({ open, onClose }) {
                       description="Show current weather conditions and time information"
                       checked={weatherEnabled}
                       onChange={(checked) =>
-                        dispatch(setWeatherEnabled(checked))
+                        updateSettings({
+                          weather: {
+                            ...weatherSettings,
+                            enabled: checked,
+                          },
+                        })
                       }
                       icon={<ScheduleIcon />}
                     />
@@ -1196,7 +1285,12 @@ export default function SettingsModal({ open, onClose }) {
                                   setSelectedCityIndex(index);
                                   const selectedCity = cityOptions[index];
                                   if (selectedCity) {
-                                    dispatch(setLocation(selectedCity));
+                                    updateSettings({
+                                      weather: {
+                                        ...weatherSettings,
+                                        location: selectedCity,
+                                      },
+                                    });
                                     setCitySearch(
                                       `${selectedCity.name}, ${selectedCity.country}`
                                     );
@@ -1233,7 +1327,12 @@ export default function SettingsModal({ open, onClose }) {
                             label="Custom Display Name"
                             value={customDisplayName}
                             onChange={(e) =>
-                              dispatch(setCustomLocationName(e.target.value))
+                              updateSettings({
+                                weather: {
+                                  ...weatherSettings,
+                                  customName: e.target.value,
+                                },
+                              })
                             }
                             onKeyPress={(e) => {
                               if (e.key === "Enter") {
@@ -1254,7 +1353,12 @@ export default function SettingsModal({ open, onClose }) {
                             <Select
                               value={timeFormat}
                               onChange={(e) =>
-                                dispatch(setTimeFormat(e.target.value))
+                                updateSettings({
+                                  weather: {
+                                    ...weatherSettings,
+                                    timeFormat: e.target.value,
+                                  },
+                                })
                               }
                               label="Time Format"
                             >
@@ -1270,7 +1374,12 @@ export default function SettingsModal({ open, onClose }) {
                             <Select
                               value={tempUnit}
                               onChange={(e) =>
-                                dispatch(setTemperatureUnit(e.target.value))
+                                updateSettings({
+                                  weather: {
+                                    ...weatherSettings,
+                                    temperatureUnit: e.target.value,
+                                  },
+                                })
                               }
                               label="Temperature Unit"
                             >
@@ -1296,7 +1405,12 @@ export default function SettingsModal({ open, onClose }) {
                       description="Display personalized Islamic greetings with your name"
                       checked={greetingsEnabled}
                       onChange={(checked) =>
-                        dispatch(setGreetingsEnabled(checked))
+                        updateSettings({
+                          greetings: {
+                            ...greetingsSettings,
+                            enabled: checked,
+                          },
+                        })
                       }
                       icon={<PersonIcon />}
                     />
@@ -1362,7 +1476,14 @@ export default function SettingsModal({ open, onClose }) {
                       title="Task Management"
                       description="Enable the todo list to organize your daily tasks and goals"
                       checked={tasksEnabled}
-                      onChange={(checked) => dispatch(setTasksEnabled(checked))}
+                      onChange={(checked) =>
+                        updateSettings({
+                          tasks: {
+                            ...tasksSettings,
+                            enabled: checked,
+                          },
+                        })
+                      }
                       icon={<AssignmentIcon />}
                     />
 
