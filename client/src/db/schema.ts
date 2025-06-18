@@ -58,6 +58,18 @@ export interface IlmTabSettings {
     currentUploadedImageIndex: number;
     blurIntensity: number;
     opacity: number;
+    imageCache: {
+      images: Array<{
+        id: string;
+        url: string;
+        authorName: string;
+        authorLink: string;
+        fetchedAt: number;
+      }>;
+      currentIndex: number;
+      lastFetchTime: number;
+      category: string;
+    };
   };
 }
 
@@ -220,6 +232,12 @@ export const defaultSettings: IlmTabSettings = {
     uploadedImages: [],
     currentUploadedImageIndex: 0,
     blurIntensity: 0,
-    opacity: 100
+    opacity: 100,
+    imageCache: {
+      images: [],
+      currentIndex: 0,
+      lastFetchTime: 0,
+      category: ""
+    }
   }
 };

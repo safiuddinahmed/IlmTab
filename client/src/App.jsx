@@ -38,6 +38,7 @@ import {
   IndexedDBProvider,
   useIndexedDBContext,
 } from "./contexts/IndexedDBContext";
+import { useRotatingImageCache } from "./hooks/useRotatingImageCache";
 
 const ACCESS_KEY = "CmH0hk3YgDGkNbMvPBhbNL8n23lQwrNnrneWYr-lVlc";
 
@@ -71,6 +72,13 @@ function App() {
   // Use IndexedDB context
   const { settings, favorites } = useIndexedDBContext();
 
+  // Use rotating image cache
+  const {
+    currentImage,
+    loading: imageLoading,
+    cacheInfo,
+  } = useRotatingImageCache();
+
   // Ref to prevent multiple simultaneous background fetches
   const fetchingRef = useRef(false);
 
@@ -101,243 +109,42 @@ function App() {
   const currentUploadedImageIndex =
     backgroundSettings?.currentUploadedImageIndex || 0;
 
-  // Single effect to handle all background fetching logic
+  // Handle background image from rotating cache or uploaded images
   useEffect(() => {
-    const fetchBackground = async () => {
-      // Prevent multiple simultaneous fetches
-      if (fetchingRef.current) {
-        console.log("Already fetching background, skipping...");
-        return;
-      }
+    if (imageSource === "upload" && uploadedImages.length > 0) {
+      // Handle uploaded images (keep existing logic)
+      const imageIndex = currentUploadedImageIndex % uploadedImages.length;
+      const selectedImage = uploadedImages[imageIndex];
 
-      fetchingRef.current = true;
+      const optimizedUrl = selectedImage.url.includes("unsplash.com")
+        ? buildOptimizedImageUrl(selectedImage.url)
+        : selectedImage.url;
 
-      console.log("fetchBackground called:", {
-        imageSource,
-        uploadedImagesCount: uploadedImages.length,
-        imageSizingInfo: getImageSizingInfo(),
+      setBackgroundUrl(optimizedUrl);
+      setPhotoAuthorName("Your Upload");
+      setPhotoAuthorLink("#");
+    } else if (imageSource === "category" && currentImage) {
+      // Use rotating cache image
+      const optimizedUrl = buildOptimizedImageUrl(currentImage.url);
+      setBackgroundUrl(optimizedUrl);
+      setPhotoAuthorName(currentImage.authorName);
+      setPhotoAuthorLink(currentImage.authorLink);
+
+      console.log("🖼️ Using cached image:", {
+        id: currentImage.id,
+        author: currentImage.authorName,
+        cacheInfo,
       });
-
-      try {
-        if (imageSource === "upload" && uploadedImages.length > 0) {
-          // Use uploaded images in sequential order
-          const imageIndex = currentUploadedImageIndex % uploadedImages.length;
-          const selectedImage = uploadedImages[imageIndex];
-          console.log(
-            "Using uploaded image:",
-            selectedImage.name,
-            "Index:",
-            imageIndex
-          );
-
-          // Update index for next refresh
-          const nextIndex =
-            (currentUploadedImageIndex + 1) % uploadedImages.length;
-
-          // Optimize uploaded image if it's from Unsplash
-          const optimizedUrl = selectedImage.url.includes("unsplash.com")
-            ? buildOptimizedImageUrl(selectedImage.url)
-            : selectedImage.url;
-
-          setBackgroundUrl(optimizedUrl);
-          setPhotoAuthorName("Your Upload");
-          setPhotoAuthorLink("#");
-
-          // Update settings with new index and current image
-          settings?.updateSettings({
-            background: {
-              ...backgroundSettings,
-              currentUploadedImageIndex: nextIndex,
-              currentImageUrl: optimizedUrl,
-              lastRefreshTime: Date.now(),
-              isUsingFallback: false, // Clear fallback flag
-            },
-          });
-
-          fetchingRef.current = false;
-          return; // Successfully set uploaded image
-        } else if (imageSource === "category") {
-          console.log("Using category mode with image optimization");
-
-          // Check cache first
-          const cacheKey = `${islamicCategory}-${
-            getImageSizingInfo().optimalWidth
-          }`;
-          const cachedImage = imageCache.get(cacheKey);
-
-          if (cachedImage && Math.random() > 0.3) {
-            // 70% chance to use cache
-            console.log("Using cached optimized image");
-            setBackgroundUrl(cachedImage.optimizedUrl);
-            setPhotoAuthorName(cachedImage.authorName);
-            setPhotoAuthorLink(cachedImage.authorLink);
-
-            settings?.updateSettings({
-              background: {
-                ...backgroundSettings,
-                currentImageUrl: cachedImage.optimizedUrl,
-                lastRefreshTime: Date.now(),
-                isUsingFallback: false, // Clear fallback flag
-              },
-            });
-
-            fetchingRef.current = false;
-            return;
-          }
-
-          // In development, use optimized static image
-          if (process.env.NODE_ENV === "development") {
-            const devImageRaw =
-              "https://images.unsplash.com/photo-1506744038136-46273834b3fb";
-            const optimizedDevImage = buildOptimizedImageUrl(devImageRaw);
-
-            setBackgroundUrl(optimizedDevImage);
-            setPhotoAuthorName("Annie Spratt");
-            setPhotoAuthorLink(
-              "https://unsplash.com/@anniespratt?utm_source=ilmtab&utm_medium=referral"
-            );
-
-            settings?.updateSettings({
-              background: {
-                ...backgroundSettings,
-                currentImageUrl: optimizedDevImage,
-                lastRefreshTime: Date.now(),
-                isUsingFallback: false, // Clear fallback flag
-              },
-            });
-
-            fetchingRef.current = false;
-            return;
-          }
-
-          // Use Islamic categories with Unsplash in production
-          const categoryQueries = {
-            nature: "nature,landscape,mountains,sky,peaceful",
-            architecture: "mosque,islamic architecture,minaret,dome",
-            calligraphy: "arabic calligraphy,islamic art",
-            geometric:
-              "islamic pattern,islamic geometric,mandala,islamic symmetry",
-          };
-
-          const query =
-            categoryQueries[islamicCategory] || categoryQueries.nature;
-
-          const response = await axios.get(
-            "https://api.unsplash.com/photos/random",
-            {
-              params: {
-                query: query,
-                orientation: "landscape",
-              },
-              headers: {
-                Authorization: `Client-ID ${ACCESS_KEY}`,
-              },
-            }
-          );
-
-          if (response.data && response.data.urls && response.data.urls.raw) {
-            const data = response.data;
-
-            // Build optimized image URL using Tabliss-style optimization
-            const optimizedUrl = buildOptimizedImageUrl(data.urls.raw);
-            const placeholderUrl = buildPlaceholderUrl(data.urls.raw);
-
-            console.log("Image optimization info:", {
-              original: data.urls.full,
-              optimized: optimizedUrl,
-              placeholder: placeholderUrl,
-              sizingInfo: getImageSizingInfo(),
-            });
-
-            // Set optimized image data with proper UTM parameters for attribution
-            setBackgroundUrl(optimizedUrl);
-            setPhotoAuthorName(data.user.name);
-            setPhotoAuthorLink(
-              `${data.user.links.html}?utm_source=ilmtab&utm_medium=referral`
-            );
-
-            settings?.updateSettings({
-              background: {
-                ...backgroundSettings,
-                currentImageUrl: optimizedUrl,
-                lastRefreshTime: Date.now(),
-                isUsingFallback: false, // Clear fallback flag
-              },
-            });
-
-            // Cache the optimized image
-            imageCache.set(cacheKey, {
-              optimizedUrl,
-              placeholderUrl,
-              authorName: data.user.name,
-              authorLink: `${data.user.links.html}?utm_source=ilmtab&utm_medium=referral`,
-              rawUrl: data.urls.raw,
-            });
-
-            // CRITICAL: Trigger download tracking as required by Unsplash API
-            if (data.links && data.links.download_location) {
-              try {
-                console.log("Triggering download tracking for image:", data.id);
-                const downloadResponse = await axios.get(
-                  data.links.download_location,
-                  {
-                    headers: {
-                      Authorization: `Client-ID ${ACCESS_KEY}`,
-                    },
-                    timeout: 5000,
-                  }
-                );
-                console.log(
-                  "✅ Download successfully tracked for Unsplash image:",
-                  data.id
-                );
-              } catch (err) {
-                console.error(
-                  "❌ Failed to track download for image:",
-                  data.id,
-                  err.message
-                );
-              }
-            }
-
-            fetchingRef.current = false;
-            return; // Successfully set API image
-          } else {
-            throw new Error("Invalid API response");
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load background image", err);
-      }
-
-      // Always use optimized fallback image if we reach here (API failed or no uploaded images)
-      const fallbackRaw =
-        "https://images.unsplash.com/photo-1506744038136-46273834b3fb";
-      const optimizedFallback =
-        buildOptimizedImageUrl(fallbackRaw) ||
-        `${fallbackRaw}?auto=format&fit=crop&w=1920&q=80`;
-
-      setBackgroundUrl(optimizedFallback);
+    } else if (!currentImage && !imageLoading) {
+      // Fallback image when cache fails
+      const fallbackUrl = buildOptimizedImageUrl(
+        "https://images.unsplash.com/photo-1506744038136-46273834b3fb"
+      );
+      setBackgroundUrl(fallbackUrl);
       setPhotoAuthorName("Fallback Image");
       setPhotoAuthorLink("#");
-
-      settings?.updateSettings({
-        background: {
-          ...backgroundSettings,
-          currentImageUrl: optimizedFallback,
-          lastRefreshTime: Date.now(),
-          isUsingFallback: true, // Mark that we're using fallback
-        },
-      });
-
-      fetchingRef.current = false;
-    };
-
-    // Only fetch if we have settings loaded and should refresh
-    if (settings?.settings) {
-      fetchBackground();
     }
-  }, [imageSource, islamicCategory, uploadedImages.length]);
+  }, [currentImage, imageSource, uploadedImages, currentUploadedImageIndex]);
 
   const fetchAyah = async (surah = null, ayah = null) => {
     try {
