@@ -35,9 +35,11 @@ const AyahCard = ({
         mx: "auto",
         margin: "2rem auto", // less vertical margin (from 3rem)
         borderRadius: 2,
-        backgroundColor: "rgba(255, 255, 255, 0.4)",
+        background:
+          "linear-gradient(to bottom right, rgba(245, 245, 245, 0.7), rgba(255, 255, 255, 0.4))",
         backdropFilter: "blur(10px)",
-        boxShadow: "0 8px 30px rgba(0, 0, 0, 0.15)",
+        boxShadow:
+          "inset 0 0 10px rgba(0,0,0,0.05), 0 8px 30px rgba(0, 0, 0, 0.15)",
         transition: "transform 0.3s ease, box-shadow 0.3s ease",
         "&:hover": {
           transform: "translateY(-6px)",

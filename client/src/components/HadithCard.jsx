@@ -123,9 +123,11 @@ const HadithCard = ({
         mx: "auto",
         margin: "2rem auto",
         borderRadius: 2,
-        backgroundColor: "rgba(255, 255, 255, 0.4)",
+        background:
+          "linear-gradient(to bottom right, rgba(245, 245, 245, 0.7), rgba(255, 255, 255, 0.4))",
         backdropFilter: "blur(10px)",
-        boxShadow: "0 8px 30px rgba(0, 0, 0, 0.15)",
+        boxShadow:
+          "inset 0 0 10px rgba(0,0,0,0.05), 0 8px 30px rgba(0, 0, 0, 0.15)",
         "&:hover": {
           transform: "translateY(-6px)",
           boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
