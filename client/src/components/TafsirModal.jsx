@@ -12,6 +12,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useIndexedDBContext } from "../contexts/IndexedDBContext";
 import { tafsirsByLanguage } from "../constants/tafsirsByLanguage";
 import TafsirModalSkeleton from "./skeletons/TafsirModalSkeleton";
+import { fetchTafsir } from "../api/tafsir";
 
 const TafsirModal = ({ open, onClose, surah, ayah }) => {
   // Use IndexedDB context instead of Redux
@@ -36,18 +37,25 @@ const TafsirModal = ({ open, onClose, surah, ayah }) => {
   useEffect(() => {
     if (!open) return;
 
-    setLoading(true);
-    setError(null);
-    fetch(
-      `http://localhost:4000/api/tafsir?tafsirId=${tafsirId}&surah=${surah}&ayah=${ayah}`
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.error) throw new Error(data.error);
+    const loadTafsir = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const data = await fetchTafsir({
+          tafsirId,
+          surah,
+          ayah,
+        });
         setTafsir(data);
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTafsir();
   }, [open, surah, ayah, tafsirId]);
 
   return (

@@ -1,18 +1,28 @@
 {
   "manifest_version": 2,
-  "name": "IlmTab",
-  "version": "0.1.0",
-  "description": "Transform your new tab into a spiritual sanctuary with daily Quranic verses, authentic Hadith, and Islamic productivity tools. Stay connected to your faith with every browser session.",
+  "name": "IlmTab - Islamic New Tab",
+  "version": "1.3.0",
+  "description": "Transform your new tab into a spiritual experience with daily Quranic verses, Hadith, Islamic calendar, and beautiful imagery.",
+  "permissions": [
+    "storage",
+    "https://api.alquran.cloud/*",
+    "https://api.aladhan.com/*",
+    "https://api.open-meteo.com/*",
+    "https://images.unsplash.com/*",
+    "https://api.unsplash.com/*",
+    "http://api.alquran.cloud/*",
+    "https://api.quran.com/*",
+    "https://hadithapi.com/*"
+  ],
   "chrome_url_overrides": {
     "newtab": "index.html"
   },
-  "permissions": [
-    "storage"
-  ],
-  "applications": {
-    "gecko": {
-      "id": "ilmtab@example.com",
-      "strict_min_version": "57.0"
-    }
-  }
+  "icons": {
+    "16": "IlmTab-logo/vector/isolated-monochrome-black.svg",
+    "32": "IlmTab-logo/vector/isolated-monochrome-black.svg",
+    "48": "IlmTab-logo/vector/isolated-monochrome-black.svg",
+    "128": "IlmTab-logo/vector/isolated-monochrome-black.svg"
+  },
+  "content_security_policy": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; connect-src 'self' https://api.alquran.cloud http://api.alquran.cloud https://api.aladhan.com https://api.open-meteo.com https://images.unsplash.com https://api.unsplash.com https://api.quran.com https://hadithapi.com;",
+  "web_accessible_resources": ["assets/*", "IlmTab-logo/*"]
 }

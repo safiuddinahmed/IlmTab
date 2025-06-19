@@ -1142,12 +1142,9 @@ export default function SettingsModal({ open, onClose }) {
                           label="Refresh Interval"
                         >
                           <MenuItem value="newtab">🔄 Every New Tab</MenuItem>
-                          <MenuItem value="5min">⏱️ Every 5 Minutes</MenuItem>
-                          <MenuItem value="15min">⏱️ Every 15 Minutes</MenuItem>
-                          <MenuItem value="30min">⏱️ Every 30 Minutes</MenuItem>
-                          <MenuItem value="1hour">⏰ Every Hour</MenuItem>
-                          <MenuItem value="1day">📅 Every Day</MenuItem>
-                          <MenuItem value="1week">📅 Every Week</MenuItem>
+                          <MenuItem value="hourly">⏰ Every Hour</MenuItem>
+                          <MenuItem value="daily">📅 Every Day</MenuItem>
+                          <MenuItem value="weekly">📅 Every Week</MenuItem>
                         </Select>
                       </StyledFormControl>
                     </StyledPaper>

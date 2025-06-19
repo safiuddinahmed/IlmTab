@@ -26,7 +26,8 @@ const SettingsModal = lazy(() => import("./components/SettingsModal"));
 const QuranSearch = lazy(() => import("./components/QuranSearch"));
 
 import hadithBooks from "./constants/hadithBooks";
-import axios from "axios";
+import { fetchAyah as fetchAyahAPI } from "./api/ayat";
+import { fetchHadith as fetchHadithAPI } from "./api/hadith";
 import {
   buildOptimizedImageUrl,
   buildPlaceholderUrl,
@@ -163,20 +164,17 @@ function App() {
   const fetchAyah = async (surah = null, ayah = null) => {
     try {
       setLoading(true);
-      const params = new URLSearchParams();
+      const params = {
+        text_edition: textEdition,
+        audio_edition: audioEdition,
+      };
+
       if (surah && ayah) {
-        params.append("surah", surah);
-        params.append("ayah", ayah);
+        params.surah = surah;
+        params.ayah = ayah;
       }
-      params.append("text_edition", textEdition);
-      params.append("audio_edition", audioEdition);
 
-      const res = await axios.get(
-        `http://localhost:4000/api/ayat?${params.toString()}`,
-        { timeout: 10000 }
-      );
-
-      const data = res.data;
+      const data = await fetchAyahAPI(params);
       setAyah(data);
       setCurrentSurah(data.surah.number);
       setCurrentAyah(data.surah.ayahNumberInSurah);
@@ -191,26 +189,15 @@ function App() {
   const fetchHadith = async (book = null, hadithNumber = null) => {
     try {
       setHadithLoading(true);
-      const params = new URLSearchParams();
-
-      if (book) {
-        params.append("book", book);
-      } else {
-        params.append("book", hadithBook);
-      }
+      const params = {
+        book: book || hadithBook,
+      };
 
       if (hadithNumber) {
-        params.append("hadithNumber", hadithNumber);
+        params.hadithNumber = hadithNumber;
       }
 
-      const res = await axios.get(
-        `http://localhost:4000/api/hadith?${params}`,
-        {
-          timeout: 12000,
-        }
-      );
-
-      const data = res.data;
+      const data = await fetchHadithAPI(params);
       setHadith(data);
       setCurrentHadithNumber(Number(data.number));
       setError(null);

@@ -1,50 +1,34 @@
 IlmTab Browser Extension - Installation Instructions
-===================================================
+==================================================
 
-IMPORTANT: Load THIS FOLDER (ilmtab-extension) as the extension!
-
-PREREQUISITES:
-1. Make sure the IlmTab server is running on http://localhost:4000
-   (The extension needs the server to fetch Islamic content)
-
-BROWSER SUPPORT:
-✅ Chrome, Edge, Brave, Opera (use manifest.json)
-✅ Firefox (rename manifest-firefox.json to manifest.json)
-❓ Safari (requires Xcode conversion)
-
-INSTALLATION STEPS:
-
-For Chrome/Edge/Brave/Opera:
-1. Open your browser's extensions page:
-   - Chrome: chrome://extensions/
-   - Edge: edge://extensions/
-   - Brave: brave://extensions/
-   - Opera: opera://extensions/
-2. Turn ON "Developer mode" (toggle in top right corner)
+CHROME/EDGE INSTALLATION:
+1. Open Chrome/Edge and go to chrome://extensions/ (or edge://extensions/)
+2. Enable "Developer mode" (toggle in top right)
 3. Click "Load unpacked"
-4. Select THIS FOLDER (ilmtab-extension) - the one containing this file
-5. The extension will be installed and ready to use!
+4. Select the ilmtab-extension folder
+5. The extension should now be installed and your new tab will show IlmTab
 
-For Firefox:
-1. Rename "manifest-firefox.json" to "manifest.json" (replace existing)
-2. Open Firefox and go to about:debugging
-3. Click "This Firefox"
-4. Click "Load Temporary Add-on"
-5. Select the manifest.json file in this folder
+FIREFOX INSTALLATION:
+1. Open Firefox and go to about:debugging
+2. Click "This Firefox"
+3. Click "Load Temporary Add-on"
+4. Navigate to the ilmtab-extension folder and select manifest-firefox.json
+5. The extension should now be installed and your new tab will show IlmTab
 
-TESTING:
-1. Open a new tab in your browser
-2. You should see the IlmTab interface instead of the default new tab page
-3. The extension will automatically load Islamic content from the server
+IMPORTANT NOTES:
+- Make sure your local server is running on http://localhost:4000 for API calls to work
+- The extension requires internet connection for fetching verses, hadith, and weather data
+- For production use, update the API endpoints in the code to point to your deployed server
 
-TROUBLESHOOTING:
-- If you see CORS errors, make sure the server is running with the updated CORS configuration
-- If content doesn't load, check that http://localhost:4000 is accessible
-- For Firefox: Make sure you renamed manifest-firefox.json to manifest.json
-- Make sure you select the folder that contains:
-  * index.html
-  * manifest.json (or manifest-firefox.json for Firefox)
-  * assets/ folder
-  * This INSTALL.txt file
+FEATURES:
+- Daily Quranic verses with audio recitation
+- Authentic Hadith collections
+- Islamic calendar (Hijri dates)
+- Weather information with customizable location
+- Beautiful Islamic-themed background images
+- Favorites system for saving verses and hadith
+- Search functionality for Quran
+- Customizable settings and preferences
 
-Note: The server has been updated to allow browser extension origins, so CORS issues should be resolved.
+VERSION: 1.3.0
+Updated: June 2025

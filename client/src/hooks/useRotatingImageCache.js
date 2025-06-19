@@ -16,17 +16,35 @@ export const useRotatingImageCache = () => {
   const [placeholderUrl, setPlaceholderUrl] = useState(null);
   const fetchingRef = useRef(false);
   const preloadRef = useRef(null);
+  const initializedRef = useRef(false);
 
   // Get current settings
   const currentSettings = settings?.settings || {};
   const backgroundSettings = currentSettings.background || {};
   const imageSource = backgroundSettings.imageSource || 'category';
   const islamicCategory = backgroundSettings.islamicCategory || 'nature';
+  const refreshInterval = backgroundSettings.refreshInterval || 'newtab';
+  const lastRefreshTime = backgroundSettings.lastRefreshTime || 0;
   const imageCache = backgroundSettings.imageCache || {
     images: [],
     currentIndex: 0,
     lastFetchTime: 0,
     category: ''
+  };
+
+  // Helper function to check if enough time has passed based on refresh interval
+  const shouldRefreshBasedOnTime = () => {
+    if (refreshInterval === "newtab") return true;
+    
+    const now = Date.now();
+    const timeDiff = now - lastRefreshTime;
+    
+    switch (refreshInterval) {
+      case "hourly": return timeDiff > 60 * 60 * 1000; // 1 hour
+      case "daily": return timeDiff > 24 * 60 * 60 * 1000; // 24 hours
+      case "weekly": return timeDiff > 7 * 24 * 60 * 60 * 1000; // 7 days
+      default: return true;
+    }
   };
 
 
@@ -35,7 +53,7 @@ export const useRotatingImageCache = () => {
     console.log('🔄 Fetching images for category:', category);
     
     // In development, use single optimized static image to avoid API usage
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'developments') {
       console.log('🔧 Development mode: Using single static image');
       const devImageRaw = "https://images.unsplash.com/photo-1506744038136-46273834b3fb";
       
@@ -121,9 +139,6 @@ export const useRotatingImageCache = () => {
     }
   };
 
-  // Track if this is the first load to prevent unnecessary rotations
-  const hasInitialized = useRef(false);
-
   // Initialize or rotate cache
   const initializeCache = async () => {
     if (fetchingRef.current) return;
@@ -159,67 +174,72 @@ export const useRotatingImageCache = () => {
         });
 
         setCurrentImage(newImages[0]);
-        hasInitialized.current = true;
-      } else if (!hasInitialized.current) {
-        // First load with existing cache - rotate to next image
-        const currentIndex = imageCache.currentIndex;
-        const nextIndex = (currentIndex + 1) % imageCache.images.length;
-        
-        console.log('🔄 Rotating cache from index', currentIndex, 'to', nextIndex);
-        
-        // Check if we need to prefetch more images (when reaching near end)
-        const shouldPrefetch = nextIndex >= imageCache.images.length - 2; // Prefetch when 2 images left
-        
-        if (shouldPrefetch) {
-          console.log('🔄 Prefetching more images to extend cache...');
-          const newImages = await fetchImages(islamicCategory);
-          
-          // Tabliss-style: Keep last few images + append new ones (no waste!)
-          const keepLastImages = imageCache.images.slice(-3); // Keep last 3 images
-          const extendedImages = [...keepLastImages, ...newImages];
-          
-          const updatedCache = {
-            images: extendedImages,
-            currentIndex: nextIndex >= imageCache.images.length - 1 ? 3 : nextIndex, // Continue smoothly
-            lastFetchTime: Date.now(),
-            category: islamicCategory
-          };
-
-          console.log(`✅ Extended cache: ${imageCache.images.length} → ${extendedImages.length} images (no waste!)`);
-
-          settings?.updateSettings({
-            background: {
-              ...backgroundSettings,
-              imageCache: updatedCache,
-              currentImageUrl: buildOptimizedImageUrl(extendedImages[updatedCache.currentIndex]?.url),
-              lastRefreshTime: Date.now()
-            }
-          });
-
-          setCurrentImage(extendedImages[updatedCache.currentIndex]);
-        } else {
-          // Just rotate to next image
-          const nextImage = imageCache.images[nextIndex];
-          
-          settings?.updateSettings({
-            background: {
-              ...backgroundSettings,
-              imageCache: {
-                ...imageCache,
-                currentIndex: nextIndex
-              },
-              currentImageUrl: buildOptimizedImageUrl(nextImage?.url),
-              lastRefreshTime: Date.now()
-            }
-          });
-
-          setCurrentImage(nextImage);
-        }
-        hasInitialized.current = true;
       } else {
-        // Already initialized, just use current cached image
-        const cachedImage = imageCache.images[imageCache.currentIndex];
-        setCurrentImage(cachedImage);
+        // Existing cache - check if we should refresh based on time
+        const shouldRefresh = shouldRefreshBasedOnTime();
+        
+        if (shouldRefresh) {
+          console.log(`🕒 Time-based refresh needed (${refreshInterval}), rotating to next image`);
+          
+          const currentIndex = imageCache.currentIndex;
+          const nextIndex = (currentIndex + 1) % imageCache.images.length;
+          
+          console.log('🔄 Rotating cache from index', currentIndex, 'to', nextIndex);
+          
+          // Check if we need to prefetch more images (when reaching near end)
+          const shouldPrefetch = nextIndex >= imageCache.images.length - 2; // Prefetch when 2 images left
+          
+          if (shouldPrefetch) {
+            console.log('🔄 Prefetching more images to extend cache...');
+            const newImages = await fetchImages(islamicCategory);
+            
+            // Tabliss-style: Keep last few images + append new ones (no waste!)
+            const keepLastImages = imageCache.images.slice(-3); // Keep last 3 images
+            const extendedImages = [...keepLastImages, ...newImages];
+            
+            const updatedCache = {
+              images: extendedImages,
+              currentIndex: nextIndex >= imageCache.images.length - 1 ? 3 : nextIndex, // Continue smoothly
+              lastFetchTime: Date.now(),
+              category: islamicCategory
+            };
+
+            console.log(`✅ Extended cache: ${imageCache.images.length} → ${extendedImages.length} images (no waste!)`);
+
+            settings?.updateSettings({
+              background: {
+                ...backgroundSettings,
+                imageCache: updatedCache,
+                currentImageUrl: buildOptimizedImageUrl(extendedImages[updatedCache.currentIndex]?.url),
+                lastRefreshTime: Date.now()
+              }
+            });
+
+            setCurrentImage(extendedImages[updatedCache.currentIndex]);
+          } else {
+            // Just rotate to next image
+            const nextImage = imageCache.images[nextIndex];
+            
+            settings?.updateSettings({
+              background: {
+                ...backgroundSettings,
+                imageCache: {
+                  ...imageCache,
+                  currentIndex: nextIndex
+                },
+                currentImageUrl: buildOptimizedImageUrl(nextImage?.url),
+                lastRefreshTime: Date.now()
+              }
+            });
+
+            setCurrentImage(nextImage);
+          }
+        } else {
+          console.log(`⏰ Refresh interval not met (${refreshInterval}), using current cached image`);
+          // Use current cached image without rotating
+          const cachedImage = imageCache.images[imageCache.currentIndex];
+          setCurrentImage(cachedImage);
+        }
       }
     } catch (error) {
       console.error('❌ Failed to initialize cache:', error);
@@ -294,10 +314,20 @@ export const useRotatingImageCache = () => {
 
   // Initialize cache when component mounts or category changes
   useEffect(() => {
-    if (settings?.settings && imageSource === 'category') {
+    if (settings?.settings && imageSource === 'category' && !initializedRef.current) {
+      console.log('🚀 First initialization of image cache for category:', islamicCategory);
+      initializedRef.current = true;
       initializeCache();
     }
-  }, [islamicCategory, imageSource, settings?.settings]);
+  }, [settings?.settings]); // Only depend on settings being available
+
+  // Handle category changes after initial load
+  useEffect(() => {
+    if (initializedRef.current && imageSource === 'category') {
+      console.log('🔄 Category changed, reinitializing cache for:', islamicCategory);
+      initializeCache();
+    }
+  }, [islamicCategory, imageSource]);
 
   return {
     currentImage,
