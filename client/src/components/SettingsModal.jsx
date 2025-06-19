@@ -38,6 +38,7 @@ import { audioEditions } from "../constants/audioEditions";
 import { hadithBooks } from "../constants/hadithBooks";
 import Flag from "./Flag";
 import { useIndexedDBContext } from "../contexts/IndexedDBContext";
+import { useRotatingImageCache } from "../hooks/useRotatingImageCache";
 
 // Enhanced styled components
 const StyledPaper = ({ children, title, icon, ...props }) => (
@@ -210,6 +211,9 @@ export default function SettingsModal({ open, onClose }) {
   // Use IndexedDB context instead of Redux
   const { settings } = useIndexedDBContext();
   const [localTabIndex, setLocalTabIndex] = React.useState(0);
+
+  // Get fallback status from rotating image cache
+  const { isUsingFallback, currentImage } = useRotatingImageCache();
 
   // Get values from IndexedDB settings
   const currentSettings = settings?.settings || {};
@@ -496,6 +500,8 @@ export default function SettingsModal({ open, onClose }) {
       },
     });
   };
+
+  console.log("currentImage: ", currentImage);
 
   const tabData = [
     { label: "Quran", icon: <MenuBookIcon /> },
@@ -1041,17 +1047,27 @@ export default function SettingsModal({ open, onClose }) {
                                     />
                                     <IconButton
                                       size="small"
-                                      onClick={() =>
-                                        updateSettings({
+                                      onClick={() => {
+                                        const remainingImages =
+                                          backgroundUploadedImages.filter(
+                                            (img) => img.id !== image.id
+                                          );
+
+                                        // If no images remain, switch back to category mode
+                                        const newSettings = {
                                           background: {
                                             ...backgroundSettings,
-                                            uploadedImages:
-                                              backgroundUploadedImages.filter(
-                                                (img) => img.id !== image.id
-                                              ),
+                                            uploadedImages: remainingImages,
                                           },
-                                        })
-                                      }
+                                        };
+
+                                        if (remainingImages.length === 0) {
+                                          newSettings.background.imageSource =
+                                            "category";
+                                        }
+
+                                        updateSettings(newSettings);
+                                      }}
                                       sx={{
                                         position: "absolute",
                                         top: -6,
@@ -1149,9 +1165,9 @@ export default function SettingsModal({ open, onClose }) {
                       </StyledFormControl>
                     </StyledPaper>
 
-                    {/* Fallback Image Status - Show when fallback is being used or in development mode */}
-                    {(backgroundSettings?.isUsingFallback ||
-                      process.env.NODE_ENV === "development") && (
+                    {/* Fallback Status - show only when current image is the fallback image URL */}
+                    {currentImage?.url ===
+                      "https://images.unsplash.com/photo-1506744038136-46273834b3fb" && (
                       <StyledPaper
                         title="Fallback Image Status"
                         icon={<ImageIcon />}
@@ -1161,8 +1177,8 @@ export default function SettingsModal({ open, onClose }) {
                           color="text.secondary"
                           sx={{ mb: 3 }}
                         >
-                          Currently using fallback image because other sources
-                          are unavailable.
+                          Currently using fallback image due to no available
+                          images or API issues.
                         </Typography>
 
                         <Box
@@ -1171,18 +1187,15 @@ export default function SettingsModal({ open, onClose }) {
                             flexDirection: "column",
                             alignItems: "center",
                             p: 2,
-                            bgcolor: "rgba(255, 193, 7, 0.04)",
+                            bgcolor: "rgba(255, 152, 0, 0.04)",
                             borderRadius: 2,
-                            border: "1px solid rgba(255, 193, 7, 0.2)",
+                            border: "1px solid rgba(255, 152, 0, 0.2)",
                           }}
                         >
                           <Box
                             component="img"
-                            src={
-                              backgroundSettings?.currentImageUrl ||
-                              "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=300&q=80"
-                            }
-                            alt="Current fallback image"
+                            src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=300&q=80"
+                            alt="Fallback image"
                             sx={{
                               width: 150,
                               height: 100,
@@ -1197,21 +1210,17 @@ export default function SettingsModal({ open, onClose }) {
                             color="warning.main"
                             sx={{ fontWeight: 500, textAlign: "center" }}
                           >
-                            ⚠️{" "}
-                            {process.env.NODE_ENV === "development"
-                              ? "Dev mode image"
-                              : "Fallback image in use"}
+                            ⚠️ Fallback Image Active
                           </Typography>
                           <Typography
                             variant="caption"
                             color="text.secondary"
                             sx={{ textAlign: "center", mt: 0.5 }}
                           >
-                            {process.env.NODE_ENV === "development"
-                              ? "Using static image in development mode"
-                              : backgroundImageSource === "category"
-                              ? "Unsplash API unavailable"
-                              : "No uploaded images available"}
+                            {backgroundImageSource === "upload" &&
+                            backgroundUploadedImages.length === 0
+                              ? "Upload images or switch to Unsplash to use different backgrounds"
+                              : "Using fallback due to API issues or no cached images"}
                           </Typography>
                         </Box>
                       </StyledPaper>

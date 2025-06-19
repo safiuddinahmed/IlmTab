@@ -6,14 +6,19 @@ import axios from 'axios';
 const ACCESS_KEY = "CmH0hk3YgDGkNbMvPBhbNL8n23lQwrNnrneWYr-lVlc";
 
 /**
- * Rotating image cache hook inspired by Tabliss
- * Fetches 5 images on load, rotates through them, and prefetches when needed
+ * Rotating image cache hook with proper fallback handling
+ * Requirements:
+ * 1. Upload images rotate based on interval
+ * 2. When uploads removed, auto-switch to Unsplash or fallback
+ * 3. Show fallback status when using fallback image
+ * 4. Keep fallback status when switching to empty upload mode
  */
 export const useRotatingImageCache = () => {
   const { settings } = useIndexedDBContext();
   const [currentImage, setCurrentImage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [placeholderUrl, setPlaceholderUrl] = useState(null);
+  const [isUsingFallback, setIsUsingFallback] = useState(false);
   const fetchingRef = useRef(false);
   const preloadRef = useRef(null);
   const initializedRef = useRef(false);
@@ -31,10 +36,23 @@ export const useRotatingImageCache = () => {
     lastFetchTime: 0,
     category: ''
   };
+  const uploadedImages = backgroundSettings.uploadedImages || [];
+  const currentUploadedImageIndex = backgroundSettings.currentUploadedImageIndex || 0;
+
+  // Fallback image definition
+  const FALLBACK_IMAGE = {
+    id: 'fallback',
+    url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
+    authorName: 'Fallback Image',
+    authorLink: '#',
+    fetchedAt: Date.now()
+  };
 
   // Helper function to check if enough time has passed based on refresh interval
   const shouldRefreshBasedOnTime = () => {
-    if (refreshInterval === "newtab") return true;
+    if (refreshInterval === "newtab") {
+      return true; // Always rotate on new tab
+    }
     
     const now = Date.now();
     const timeDiff = now - lastRefreshTime;
@@ -47,23 +65,36 @@ export const useRotatingImageCache = () => {
     }
   };
 
+  // Update settings helper
+  const updateBackgroundSettings = (updates) => {
+    settings?.updateSettings({
+      background: {
+        ...backgroundSettings,
+        ...updates
+      }
+    });
+  };
 
-  // Fetch images from Unsplash API or use single static image in development
+  // Set fallback image
+  const setFallbackImage = () => {
+    console.log('🔄 Using fallback image');
+    setCurrentImage(FALLBACK_IMAGE);
+    setIsUsingFallback(true);
+    updateBackgroundSettings({
+      isUsingFallback: true,
+      currentImageUrl: buildOptimizedImageUrl(FALLBACK_IMAGE.url),
+      lastRefreshTime: Date.now()
+    });
+  };
+
+  // Fetch images from Unsplash API
   const fetchImages = async (category) => {
     console.log('🔄 Fetching images for category:', category);
     
-    // In development, use single optimized static image to avoid API usage
+    // In development, use fallback image
     if (process.env.NODE_ENV === 'development') {
-      console.log('🔧 Development mode: Using single static image');
-      const devImageRaw = "https://images.unsplash.com/photo-1506744038136-46273834b3fb";
-      
-      return [{
-        id: 'dev-static',
-        url: devImageRaw,
-        authorName: 'Annie Spratt (Dev Mode)',
-        authorLink: 'https://unsplash.com/@anniespratt?utm_source=ilmtab&utm_medium=referral',
-        fetchedAt: Date.now()
-      }];
+      console.log('🔧 Development mode: Using fallback image');
+      return [FALLBACK_IMAGE];
     }
     
     try {
@@ -71,7 +102,7 @@ export const useRotatingImageCache = () => {
       const categoryQueries = {
         nature: "nature,landscape,mountains,sky,peaceful",
         architecture: "mosque,islamic architecture,minaret,dome",
-        calligraphy: "arabic calligraphy,islamic art",
+        calligraphy: "quran, arabic calligraphy,",
         geometric: "islamic pattern,islamic geometric,mandala,islamic symmetry",
       };
 
@@ -99,7 +130,7 @@ export const useRotatingImageCache = () => {
           authorName: data.user.name,
           authorLink: `${data.user.links.html}?utm_source=ilmtab&utm_medium=referral`,
           fetchedAt: Date.now(),
-          downloadLocation: data.links.download_location, // For tracking
+          downloadLocation: data.links.download_location,
         }));
 
         console.log('✅ Fetched', images.length, 'images from Unsplash API');
@@ -114,7 +145,6 @@ export const useRotatingImageCache = () => {
                 },
                 timeout: 5000,
               });
-              console.log('✅ Download tracked for image:', image.id);
             } catch (err) {
               console.error('❌ Failed to track download for image:', image.id);
             }
@@ -127,36 +157,23 @@ export const useRotatingImageCache = () => {
       }
     } catch (error) {
       console.error('❌ Failed to fetch from Unsplash API:', error);
-      
-      // Fallback to single optimized image
-      return [{
-        id: 'fallback',
-        url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
-        authorName: 'Annie Spratt',
-        authorLink: 'https://unsplash.com/@anniespratt?utm_source=ilmtab&utm_medium=referral',
-        fetchedAt: Date.now()
-      }];
+      return [FALLBACK_IMAGE];
     }
   };
 
-  // Initialize or rotate cache
-  const initializeCache = async () => {
-    if (fetchingRef.current) return;
-    fetchingRef.current = true;
-    setLoading(true);
-
+  // Handle Unsplash image rotation
+  const handleUnsplashImages = async () => {
     try {
       const needsNewCache = 
-        imageCache.images.length === 0 || // No cache
-        imageCache.category !== islamicCategory; // Category changed
+        imageCache.images.length === 0 || 
+        imageCache.category !== islamicCategory;
 
       if (needsNewCache) {
         console.log('🔄 Initializing new cache for category:', islamicCategory);
         
-        // Fetch fresh images
         const newImages = await fetchImages(islamicCategory);
+        const isFallback = newImages.length === 1 && newImages[0].id === 'fallback';
         
-        // Update cache in settings
         const newCache = {
           images: newImages,
           currentIndex: 0,
@@ -164,18 +181,17 @@ export const useRotatingImageCache = () => {
           category: islamicCategory
         };
 
-        settings?.updateSettings({
-          background: {
-            ...backgroundSettings,
-            imageCache: newCache,
-            currentImageUrl: buildOptimizedImageUrl(newImages[0]?.url),
-            lastRefreshTime: Date.now()
-          }
+        updateBackgroundSettings({
+          imageCache: newCache,
+          currentImageUrl: buildOptimizedImageUrl(newImages[0]?.url),
+          lastRefreshTime: Date.now(),
+          isUsingFallback: isFallback
         });
 
         setCurrentImage(newImages[0]);
+        setIsUsingFallback(isFallback);
       } else {
-        // Existing cache - check if we should refresh based on time
+        // Check if we should rotate based on time
         const shouldRefresh = shouldRefreshBasedOnTime();
         
         if (shouldRefresh) {
@@ -183,86 +199,140 @@ export const useRotatingImageCache = () => {
           
           const currentIndex = imageCache.currentIndex;
           const nextIndex = (currentIndex + 1) % imageCache.images.length;
+          const nextImage = imageCache.images[nextIndex];
           
           console.log('🔄 Rotating cache from index', currentIndex, 'to', nextIndex);
           
-          // Check if we need to prefetch more images (when reaching near end)
-          const shouldPrefetch = nextIndex >= imageCache.images.length - 2; // Prefetch when 2 images left
+          // Check if we need to prefetch more images
+          const shouldPrefetch = nextIndex >= imageCache.images.length - 2;
           
-          if (shouldPrefetch) {
-            console.log('🔄 Prefetching more images to extend cache...');
+          if (shouldPrefetch && imageCache.images[0]?.id !== 'fallback') {
+            console.log('🔄 Prefetching more images...');
             const newImages = await fetchImages(islamicCategory);
             
-            // Tabliss-style: Keep last few images + append new ones (no waste!)
-            const keepLastImages = imageCache.images.slice(-3); // Keep last 3 images
-            const extendedImages = [...keepLastImages, ...newImages];
-            
-            const updatedCache = {
-              images: extendedImages,
-              currentIndex: nextIndex >= imageCache.images.length - 1 ? 3 : nextIndex, // Continue smoothly
-              lastFetchTime: Date.now(),
-              category: islamicCategory
-            };
+            if (newImages[0]?.id !== 'fallback') {
+              const keepLastImages = imageCache.images.slice(-3);
+              const extendedImages = [...keepLastImages, ...newImages];
+              
+              const updatedCache = {
+                images: extendedImages,
+                currentIndex: nextIndex >= imageCache.images.length - 1 ? 3 : nextIndex,
+                lastFetchTime: Date.now(),
+                category: islamicCategory
+              };
 
-            console.log(`✅ Extended cache: ${imageCache.images.length} → ${extendedImages.length} images (no waste!)`);
-
-            settings?.updateSettings({
-              background: {
-                ...backgroundSettings,
+              updateBackgroundSettings({
                 imageCache: updatedCache,
                 currentImageUrl: buildOptimizedImageUrl(extendedImages[updatedCache.currentIndex]?.url),
-                lastRefreshTime: Date.now()
-              }
-            });
+                lastRefreshTime: Date.now(),
+                isUsingFallback: false
+              });
 
-            setCurrentImage(extendedImages[updatedCache.currentIndex]);
+              setCurrentImage(extendedImages[updatedCache.currentIndex]);
+              setIsUsingFallback(false);
+            } else {
+              // Fallback case
+              setFallbackImage();
+            }
           } else {
             // Just rotate to next image
-            const nextImage = imageCache.images[nextIndex];
+            const isFallback = nextImage?.id === 'fallback';
             
-            settings?.updateSettings({
-              background: {
-                ...backgroundSettings,
-                imageCache: {
-                  ...imageCache,
-                  currentIndex: nextIndex
-                },
-                currentImageUrl: buildOptimizedImageUrl(nextImage?.url),
-                lastRefreshTime: Date.now()
-              }
+            updateBackgroundSettings({
+              imageCache: {
+                ...imageCache,
+                currentIndex: nextIndex
+              },
+              currentImageUrl: buildOptimizedImageUrl(nextImage?.url),
+              lastRefreshTime: Date.now(),
+              isUsingFallback: isFallback
             });
 
             setCurrentImage(nextImage);
+            setIsUsingFallback(isFallback);
           }
         } else {
           console.log(`⏰ Refresh interval not met (${refreshInterval}), using current cached image`);
-          // Use current cached image without rotating
           const cachedImage = imageCache.images[imageCache.currentIndex];
+          const isFallback = cachedImage?.id === 'fallback';
+          
           setCurrentImage(cachedImage);
+          setIsUsingFallback(isFallback);
         }
       }
     } catch (error) {
-      console.error('❌ Failed to initialize cache:', error);
+      console.error('❌ Failed to handle Unsplash images:', error);
+      setFallbackImage();
+    }
+  };
+
+  // Handle uploaded image rotation
+  const handleUploadedImages = () => {
+    if (uploadedImages.length === 0) {
+      console.log('📁 No uploaded images, using fallback');
+      setFallbackImage();
+      return;
+    }
+
+    const shouldRefresh = shouldRefreshBasedOnTime();
+    
+    if (shouldRefresh) {
+      console.log(`🕒 Time-based refresh needed (${refreshInterval}), rotating uploaded image`);
       
-      // Fallback to single image
-      const fallbackImage = {
-        id: 'fallback',
-        url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
-        authorName: 'Fallback Image',
+      const nextIndex = (currentUploadedImageIndex + 1) % uploadedImages.length;
+      const nextUploadedImage = uploadedImages[nextIndex];
+      
+      console.log('🔄 Rotating uploaded image from index', currentUploadedImageIndex, 'to', nextIndex);
+      
+      updateBackgroundSettings({
+        currentUploadedImageIndex: nextIndex,
+        lastRefreshTime: Date.now(),
+        isUsingFallback: false,
+        currentImageUrl: buildOptimizedImageUrl(nextUploadedImage.url)
+      });
+
+      setCurrentImage({
+        id: nextUploadedImage.id,
+        url: nextUploadedImage.url,
+        authorName: 'Your Upload',
         authorLink: '#',
         fetchedAt: Date.now()
-      };
-      
-      setCurrentImage(fallbackImage);
-      
-      settings?.updateSettings({
-        background: {
-          ...backgroundSettings,
-          currentImageUrl: buildOptimizedImageUrl(fallbackImage.url),
-          lastRefreshTime: Date.now(),
-          isUsingFallback: true
-        }
       });
+      setIsUsingFallback(false);
+    } else {
+      console.log(`⏰ Refresh interval not met (${refreshInterval}), using current uploaded image`);
+      const currentUploadedImage = uploadedImages[currentUploadedImageIndex];
+      
+      if (currentUploadedImage) {
+        setCurrentImage({
+          id: currentUploadedImage.id,
+          url: currentUploadedImage.url,
+          authorName: 'Your Upload',
+          authorLink: '#',
+          fetchedAt: Date.now()
+        });
+        setIsUsingFallback(false);
+      } else {
+        setFallbackImage();
+      }
+    }
+  };
+
+  // Main initialization function
+  const initializeImages = async () => {
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
+    setLoading(true);
+
+    try {
+      if (imageSource === 'upload') {
+        handleUploadedImages();
+      } else {
+        await handleUnsplashImages();
+      }
+    } catch (error) {
+      console.error('❌ Failed to initialize images:', error);
+      setFallbackImage();
     } finally {
       setLoading(false);
       fetchingRef.current = false;
@@ -272,29 +342,25 @@ export const useRotatingImageCache = () => {
   // Progressive loading with blur placeholder
   useEffect(() => {
     if (currentImage?.url) {
-      // Show blur placeholder immediately
       const placeholder = buildPlaceholderUrl(currentImage.url);
       if (placeholder) {
         setPlaceholderUrl(placeholder);
-        console.log('🖼️ Showing blur placeholder for instant feedback');
       }
     }
   }, [currentImage]);
 
-  // Preload next image (Tabliss-style optimization)
+  // Preload next image for Unsplash
   useEffect(() => {
-    if (imageCache.images.length > 0) {
+    if (imageSource === 'category' && imageCache.images.length > 0 && !isUsingFallback) {
       const nextIndex = (imageCache.currentIndex + 1) % imageCache.images.length;
       const nextImage = imageCache.images[nextIndex];
       
       if (nextImage && nextImage.url) {
-        // Cancel previous preload
         if (preloadRef.current) {
           preloadRef.current.onload = null;
           preloadRef.current.onerror = null;
         }
         
-        // Preload next image
         preloadRef.current = new Image();
         const optimizedUrl = buildOptimizedImageUrl(nextImage.url);
         
@@ -302,42 +368,64 @@ export const useRotatingImageCache = () => {
           console.log('✅ Preloaded next image:', nextImage.id);
         };
         
-        preloadRef.current.onerror = () => {
-          console.log('❌ Failed to preload next image:', nextImage.id);
-        };
-        
         preloadRef.current.src = optimizedUrl;
-        console.log('🔄 Preloading next image:', nextImage.id);
       }
     }
-  }, [imageCache.currentIndex, imageCache.images]);
+  }, [imageCache.currentIndex, imageCache.images, imageSource, isUsingFallback]);
 
-  // Initialize cache when component mounts or category changes
+  // Initialize on mount
   useEffect(() => {
-    if (settings?.settings && imageSource === 'category' && !initializedRef.current) {
-      console.log('🚀 First initialization of image cache for category:', islamicCategory);
+    if (settings?.settings && !initializedRef.current) {
+      console.log('🚀 First initialization for image source:', imageSource);
       initializedRef.current = true;
-      initializeCache();
+      initializeImages();
     }
-  }, [settings?.settings]); // Only depend on settings being available
+  }, [settings?.settings]);
 
-  // Handle category changes after initial load
+  // Handle image source and settings changes
   useEffect(() => {
-    if (initializedRef.current && imageSource === 'category') {
-      console.log('🔄 Category changed, reinitializing cache for:', islamicCategory);
-      initializeCache();
+    if (initializedRef.current) {
+      console.log('🔄 Settings changed, reinitializing...');
+      initializeImages();
     }
-  }, [islamicCategory, imageSource]);
+  }, [imageSource, islamicCategory, uploadedImages.length]);
+
+  // Handle uploaded images removal - auto-switch to Unsplash
+  // Only switch if we had images before and now they're all deleted
+  const previousUploadedImagesLength = useRef(uploadedImages.length);
+  
+  useEffect(() => {
+    // Only auto-switch if:
+    // 1. We're in upload mode
+    // 2. We previously had images (not a fresh switch to upload mode)
+    // 3. Now we have 0 images (user deleted them all)
+    if (
+      initializedRef.current && 
+      imageSource === 'upload' && 
+      uploadedImages.length === 0 && 
+      previousUploadedImagesLength.current > 0
+    ) {
+      console.log('📁 All uploaded images removed, switching to Unsplash');
+      updateBackgroundSettings({
+        imageSource: 'category'
+      });
+    }
+    
+    // Update the previous count
+    previousUploadedImagesLength.current = uploadedImages.length;
+  }, [uploadedImages.length, imageSource]);
 
   return {
     currentImage,
     loading,
     placeholderUrl,
+    isUsingFallback,
     cacheInfo: {
-      totalImages: imageCache.images.length,
-      currentIndex: imageCache.currentIndex,
+      totalImages: imageSource === 'upload' ? uploadedImages.length : imageCache.images.length,
+      currentIndex: imageSource === 'upload' ? currentUploadedImageIndex : imageCache.currentIndex,
       category: imageCache.category,
-      lastFetchTime: imageCache.lastFetchTime
+      lastFetchTime: imageCache.lastFetchTime,
+      imageSource
     }
   };
 };

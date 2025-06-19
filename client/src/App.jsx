@@ -78,6 +78,7 @@ function App() {
     currentImage,
     loading: imageLoading,
     placeholderUrl,
+    isUsingFallback,
     cacheInfo,
   } = useRotatingImageCache();
 
@@ -126,14 +127,14 @@ function App() {
       setPhotoAuthorName("Your Upload");
       setPhotoAuthorLink("#");
     } else if (imageSource === "category" && currentImage) {
-      // Use rotating cache image with instant placeholder feedback
+      // Use rotating cache image (including fallback) with instant placeholder feedback
       if (placeholderUrl && !backgroundUrl) {
         // Show blur placeholder immediately for instant feedback
         setBackgroundUrl(placeholderUrl);
         console.log("🖼️ Showing blur placeholder for instant feedback");
       }
 
-      // Then load the optimized image
+      // Then load the optimized image (works for both regular and fallback images)
       const optimizedUrl = buildOptimizedImageUrl(currentImage.url);
       setBackgroundUrl(optimizedUrl);
       setPhotoAuthorName(currentImage.authorName);
@@ -142,16 +143,18 @@ function App() {
       console.log("🖼️ Using cached image:", {
         id: currentImage.id,
         author: currentImage.authorName,
+        url: currentImage.url,
         cacheInfo,
       });
-    } else if (!currentImage && !imageLoading) {
-      // Fallback image when cache fails
+    } else if (imageSource === "upload" && uploadedImages.length === 0) {
+      // When in upload mode but no images uploaded, use fallback
       const fallbackUrl = buildOptimizedImageUrl(
         "https://images.unsplash.com/photo-1506744038136-46273834b3fb"
       );
       setBackgroundUrl(fallbackUrl);
       setPhotoAuthorName("Fallback Image");
       setPhotoAuthorLink("#");
+      console.log("🖼️ Using fallback for empty upload mode");
     }
   }, [
     currentImage,
@@ -159,6 +162,7 @@ function App() {
     imageSource,
     uploadedImages,
     currentUploadedImageIndex,
+    imageLoading,
   ]);
 
   const fetchAyah = async (surah = null, ayah = null) => {
@@ -638,23 +642,6 @@ function App() {
               userSelect: "none",
             }}
           >
-            {(currentImage?.id === "fallback" ||
-              currentImage?.id === "dev-static" ||
-              backgroundSettings?.isUsingFallback ||
-              process.env.NODE_ENV === "development") && (
-              <div
-                style={{
-                  color: "#ffeb3b",
-                  marginBottom: "2px",
-                  fontSize: "0.7rem",
-                }}
-              >
-                ⚠️{" "}
-                {process.env.NODE_ENV === "development"
-                  ? "Dev mode image"
-                  : "Fallback image in use"}
-              </div>
-            )}
             Photo by{" "}
             <a
               href={photoAuthorLink}
