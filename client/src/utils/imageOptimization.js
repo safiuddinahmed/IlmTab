@@ -24,9 +24,15 @@ export function calculateOptimalWidth(screenWidth = 1920, pixelRatio = 1) {
 
 /**
  * Build optimized Unsplash image URL with responsive sizing and quality
+ * For local images, returns the original URL unchanged
  */
 export function buildOptimizedImageUrl(rawUrl, options = {}) {
   if (!rawUrl) return null;
+  
+  // If it's a local/relative path, return as-is
+  if (rawUrl.startsWith('/') || !rawUrl.includes('://')) {
+    return rawUrl;
+  }
   
   const {
     quality = 85,           // 85% quality - sweet spot for size vs quality
@@ -72,9 +78,15 @@ export function buildOptimizedImageUrl(rawUrl, options = {}) {
 
 /**
  * Create a low-quality placeholder URL for progressive loading
+ * For local images, returns null (no placeholder needed)
  */
 export function buildPlaceholderUrl(rawUrl) {
   if (!rawUrl) return null;
+  
+  // If it's a local/relative path, no placeholder needed
+  if (rawUrl.startsWith('/') || !rawUrl.includes('://')) {
+    return null;
+  }
   
   try {
     const url = new URL(rawUrl);

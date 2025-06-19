@@ -1166,8 +1166,7 @@ export default function SettingsModal({ open, onClose }) {
                     </StyledPaper>
 
                     {/* Fallback Status - show only when current image is the fallback image URL */}
-                    {currentImage?.url ===
-                      "https://images.unsplash.com/photo-1506744038136-46273834b3fb" && (
+                    {currentImage?.url === "/mosque.jpg" && (
                       <StyledPaper
                         title="Fallback Image Status"
                         icon={<ImageIcon />}
@@ -1194,8 +1193,8 @@ export default function SettingsModal({ open, onClose }) {
                         >
                           <Box
                             component="img"
-                            src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=300&q=80"
-                            alt="Fallback image"
+                            src="/mosque.jpg"
+                            alt="Fallback mosque image"
                             sx={{
                               width: 150,
                               height: 100,

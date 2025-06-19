@@ -39,11 +39,11 @@ export const useRotatingImageCache = () => {
   const uploadedImages = backgroundSettings.uploadedImages || [];
   const currentUploadedImageIndex = backgroundSettings.currentUploadedImageIndex || 0;
 
-  // Fallback image definition
+  // Fallback image definition - use local mosque image
   const FALLBACK_IMAGE = {
     id: 'fallback',
-    url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
-    authorName: 'Fallback Image',
+    url: '/mosque.jpg', // Use local mosque image from extension
+    authorName: 'IlmTab',
     authorLink: '#',
     fetchedAt: Date.now()
   };

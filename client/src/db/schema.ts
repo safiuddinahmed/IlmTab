@@ -6,7 +6,7 @@ export interface IlmTabSettings {
   version: string;
   ayah: {
     tafsirLanguage: string;
-    tafsirId: string;
+    tafsirId: number;
     textEdition: {
       language: string;
       identifier: string;
@@ -177,7 +177,7 @@ export const defaultSettings: IlmTabSettings = {
   version: "1.3.0",
   ayah: {
     tafsirLanguage: "english",
-    tafsirId: "169",
+    tafsirId: 169,
     textEdition: {
       language: "en",
       identifier: "en.asad",
@@ -219,7 +219,7 @@ export const defaultSettings: IlmTabSettings = {
     refreshInterval: "newtab",
     lastRefreshTime: null,
     currentImageUrl: null,
-    fallbackImageUrl: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80",
+    fallbackImageUrl: "/mosque.jpg",
     imageSource: "category",
     islamicCategory: "nature",
     uploadedImages: [],

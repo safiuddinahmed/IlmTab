@@ -148,11 +148,9 @@ function App() {
       });
     } else if (imageSource === "upload" && uploadedImages.length === 0) {
       // When in upload mode but no images uploaded, use fallback
-      const fallbackUrl = buildOptimizedImageUrl(
-        "https://images.unsplash.com/photo-1506744038136-46273834b3fb"
-      );
+      const fallbackUrl = buildOptimizedImageUrl("/mosque.jpg");
       setBackgroundUrl(fallbackUrl);
-      setPhotoAuthorName("Fallback Image");
+      setPhotoAuthorName("IlmTab");
       setPhotoAuthorLink("#");
       console.log("🖼️ Using fallback for empty upload mode");
     }
@@ -625,8 +623,8 @@ function App() {
           </Suspense>
         )}
 
-        {/* Unsplash credit */}
-        {backgroundUrl && (
+        {/* Unsplash credit - hide when using fallback image */}
+        {backgroundUrl && !isUsingFallback && photoAuthorName !== "IlmTab" && (
           <div
             style={{
               position: "fixed",
