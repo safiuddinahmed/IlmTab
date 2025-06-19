@@ -638,6 +638,23 @@ function App() {
               userSelect: "none",
             }}
           >
+            {(currentImage?.id === "fallback" ||
+              currentImage?.id === "dev-static" ||
+              backgroundSettings?.isUsingFallback ||
+              process.env.NODE_ENV === "development") && (
+              <div
+                style={{
+                  color: "#ffeb3b",
+                  marginBottom: "2px",
+                  fontSize: "0.7rem",
+                }}
+              >
+                ⚠️{" "}
+                {process.env.NODE_ENV === "development"
+                  ? "Dev mode image"
+                  : "Fallback image in use"}
+              </div>
+            )}
             Photo by{" "}
             <a
               href={photoAuthorLink}

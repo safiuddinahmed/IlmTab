@@ -1149,8 +1149,9 @@ export default function SettingsModal({ open, onClose }) {
                       </StyledFormControl>
                     </StyledPaper>
 
-                    {/* Fallback Image Status - Only show when fallback is being used */}
-                    {backgroundSettings?.isUsingFallback && (
+                    {/* Fallback Image Status - Show when fallback is being used or in development mode */}
+                    {(backgroundSettings?.isUsingFallback ||
+                      process.env.NODE_ENV === "development") && (
                       <StyledPaper
                         title="Fallback Image Status"
                         icon={<ImageIcon />}
@@ -1196,14 +1197,19 @@ export default function SettingsModal({ open, onClose }) {
                             color="warning.main"
                             sx={{ fontWeight: 500, textAlign: "center" }}
                           >
-                            ⚠️ Fallback image in use
+                            ⚠️{" "}
+                            {process.env.NODE_ENV === "development"
+                              ? "Dev mode image"
+                              : "Fallback image in use"}
                           </Typography>
                           <Typography
                             variant="caption"
                             color="text.secondary"
                             sx={{ textAlign: "center", mt: 0.5 }}
                           >
-                            {backgroundImageSource === "category"
+                            {process.env.NODE_ENV === "development"
+                              ? "Using static image in development mode"
+                              : backgroundImageSource === "category"
                               ? "Unsplash API unavailable"
                               : "No uploaded images available"}
                           </Typography>

@@ -53,14 +53,14 @@ export const useRotatingImageCache = () => {
     console.log('🔄 Fetching images for category:', category);
     
     // In development, use single optimized static image to avoid API usage
-    if (process.env.NODE_ENV === 'developments') {
+    if (process.env.NODE_ENV === 'development') {
       console.log('🔧 Development mode: Using single static image');
       const devImageRaw = "https://images.unsplash.com/photo-1506744038136-46273834b3fb";
       
       return [{
         id: 'dev-static',
         url: devImageRaw,
-        authorName: 'Annie Spratt',
+        authorName: 'Annie Spratt (Dev Mode)',
         authorLink: 'https://unsplash.com/@anniespratt?utm_source=ilmtab&utm_medium=referral',
         fetchedAt: Date.now()
       }];
