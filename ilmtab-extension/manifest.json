@@ -9,6 +9,9 @@
   "permissions": [
     "storage"
   ],
+  "host_permissions": [
+    "https://hadithapi.com/*"
+  ],
   "icons": {
     "16": "IlmTab-logo/vector/IlmTabLogo.svg",
     "48": "IlmTab-logo/vector/IlmTabLogo.svg",

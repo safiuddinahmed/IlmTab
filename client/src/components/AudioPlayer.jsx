@@ -169,10 +169,18 @@ const AudioPlayer = ({
             <Stop />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Previous Ayah">
-          <IconButton onClick={onPrev} disabled={!isContinuous}>
-            <ArrowBack />
-          </IconButton>
+        <Tooltip
+          title={
+            isContinuous
+              ? "Previous Ayah"
+              : "Enable continuous mode to navigate"
+          }
+        >
+          <span>
+            <IconButton onClick={onPrev} disabled={!isContinuous}>
+              <ArrowBack />
+            </IconButton>
+          </span>
         </Tooltip>
         <Tooltip title="Toggle Continuous Mode">
           <IconButton

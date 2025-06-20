@@ -1,6 +1,7 @@
 import { hadithList } from './fallbackData.js';
 
 // All supported Hadith books with counts for basic random logic
+// Keep original totals for proper navigation range, even though we use fallback data
 const HADITH_BOOKS = [
   { slug: 'sahih-bukhari', total: 7276 },
   { slug: 'sahih-muslim', total: 7564 },
@@ -16,27 +17,105 @@ const HADITH_BOOKS = [
 const DEFAULT_BOOK = 'sahih-bukhari';
 const HADITH_API_KEY = "$2y$10$J1BiN6U0xUa2Hp42HdsZgOcvVwc8lOPvEKEgdhqG7F1dsXjPbjka";
 
-// Browser-compatible fetch with timeout
+// Browser-compatible fetch with timeout and CORS handling
 const fetchWithTimeout = (url, timeout = 10000) => {
   return Promise.race([
-    fetch(url),
+    fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      mode: 'cors', // Explicitly set CORS mode
+      credentials: 'omit' // Don't send credentials for CORS
+    }),
     new Promise((_, reject) => 
       setTimeout(() => reject(new Error('Request timeout')), timeout)
     )
   ]);
 };
 
-// Fetch hadith data - using curated fallback data due to CORS issues with hadithapi.com
+// Fetch hadith data from hadithapi.com with fallback
 const fetchHadithData = async (book, hadithNumber) => {
-  // For now, we'll use our curated hadith collection due to CORS issues with hadithapi.com
-  // This ensures users always get authentic, high-quality hadith content
-  // The API call can be re-enabled once CORS issues are resolved
+  console.log('Fetching hadith:', hadithNumber, 'from book:', book);
   
-  console.log('Using curated hadith collection for reliable content delivery');
-  
-  // Return a random hadith from our curated list
-  const randomIndex = Math.floor(Math.random() * hadithList.length);
-  return hadithList[randomIndex];
+  try {
+    // Construct API URL using correct format
+    let apiUrl;
+    
+    if (hadithNumber) {
+      // Fetch specific hadith
+      apiUrl = `https://hadithapi.com/api/hadiths/?apiKey=${HADITH_API_KEY}&hadithNumber=${hadithNumber}&book=${book}&status=Sahih`;
+    } else {
+      // Fetch random hadith (without hadithNumber parameter)
+      apiUrl = `https://hadithapi.com/api/hadiths/?apiKey=${HADITH_API_KEY}&book=${book}&status=Sahih`;
+    }
+    
+    console.log('Making API call to:', apiUrl);
+    
+    // Make API call with timeout
+    const response = await fetchWithTimeout(apiUrl, 8000);
+    
+    if (!response.ok) {
+      throw new Error(`API responded with status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('API response received:', data);
+    
+    // Transform API response to match our expected format
+    if (data && data.hadiths && data.hadiths.length > 0) {
+      const hadith = data.hadiths[0]; // Get first hadith from results
+      
+      return {
+        number: hadith.hadithNumber || hadithNumber,
+        book: hadith.book?.name || book,
+        volume: hadith.volume || "1",
+        writer: hadith.book?.writer || "Unknown",
+        bookSlug: book,
+        narrator: {
+          english: hadith.hadithEnglish?.narrator || "",
+          urdu: hadith.hadithUrdu?.narrator || ""
+        },
+        text: {
+          english: hadith.hadithEnglish?.body || "",
+          urdu: hadith.hadithUrdu?.body || "",
+          arabic: hadith.hadithArabic?.body || ""
+        },
+        heading: {
+          english: hadith.headingEnglish || "",
+          urdu: hadith.headingUrdu || "",
+          arabic: hadith.headingArabic || ""
+        },
+        chapter: {
+          chapterNumber: hadith.chapterNumber || "0",
+          english: hadith.chapterEnglish || "",
+          urdu: hadith.chapterUrdu || "",
+          arabic: hadith.chapterArabic || ""
+        },
+        status: hadith.status || "Sahih"
+      };
+    }
+    
+    throw new Error('Invalid API response format or no hadiths found');
+    
+  } catch (error) {
+    console.warn('API call failed, using fallback data:', error.message);
+    
+    // Fallback to curated hadith collection
+    if (hadithNumber && !isNaN(hadithNumber)) {
+      const index = Math.max(0, Math.min(parseInt(hadithNumber) - 1, hadithList.length - 1));
+      const selectedHadith = { ...hadithList[index] };
+      selectedHadith.number = hadithNumber;
+      return selectedHadith;
+    }
+    
+    // Return random fallback hadith
+    const randomIndex = Math.floor(Math.random() * hadithList.length);
+    const randomHadith = { ...hadithList[randomIndex] };
+    randomHadith.number = randomIndex + 1;
+    return randomHadith;
+  }
 };
 
 // Main API function that matches the backend endpoint exactly

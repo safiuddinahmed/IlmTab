@@ -212,6 +212,9 @@ export default function SettingsModal({ open, onClose }) {
   const { settings } = useIndexedDBContext();
   const [localTabIndex, setLocalTabIndex] = React.useState(0);
 
+  // Ref for the modal container to manage focus
+  const modalRef = React.useRef(null);
+
   // Get fallback status from rotating image cache
   const { isUsingFallback, currentImage } = useRotatingImageCache();
 
@@ -513,9 +516,21 @@ export default function SettingsModal({ open, onClose }) {
   ];
 
   return (
-    <Modal open={open} onClose={onClose} closeAfterTransition>
+    <Modal
+      open={open}
+      onClose={onClose}
+      closeAfterTransition
+      disableEnforceFocus={false}
+      disableAutoFocus={false}
+      disableRestoreFocus={false}
+      keepMounted={false}
+      aria-labelledby="settings-modal-title"
+      aria-describedby="settings-modal-description"
+    >
       <Slide direction="right" in={open} mountOnEnter unmountOnExit>
         <Box
+          ref={modalRef}
+          tabIndex={-1}
           sx={{
             width: {
               xs: "100vw", // Full width on mobile
@@ -539,6 +554,7 @@ export default function SettingsModal({ open, onClose }) {
             top: 0,
             left: 0,
             border: "1px solid rgba(255, 255, 255, 0.2)",
+            outline: "none", // Remove focus outline since we handle focus properly
           }}
         >
           {/* Header */}
@@ -584,12 +600,14 @@ export default function SettingsModal({ open, onClose }) {
             >
               <Box>
                 <Typography
+                  id="settings-modal-title"
                   variant="h5"
                   sx={{ fontWeight: 700, color: "text.primary" }}
                 >
                   ⚙️ Settings
                 </Typography>
                 <Typography
+                  id="settings-modal-description"
                   variant="body2"
                   color="text.secondary"
                   sx={{ mt: 0.5 }}
