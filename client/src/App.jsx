@@ -437,7 +437,7 @@ function App() {
     backgroundSize: "cover",
     backgroundPosition: "center",
     minHeight: "100vh",
-    paddingTop: "2rem",
+    paddingTop: "1rem",
     position: "relative",
     backgroundColor: backgroundUrl ? "transparent" : "#1a1a1a",
   };
@@ -486,13 +486,13 @@ function App() {
       <div style={backgroundStyle} className={getBackgroundClasses()}>
         <Box
           sx={{
-            minHeight: "100vh",
+            minHeight: "calc(100vh - 1rem)",
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
             alignItems: "center",
             px: 2,
-            py: 4,
+            py: 1,
           }}
         >
           {/* Enhanced Error Display */}
