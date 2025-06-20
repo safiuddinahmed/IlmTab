@@ -44,58 +44,6 @@ const Greeting = ({ name = "Friend" }) => {
   const timeOfDay = getTimeOfDay();
   const messages = greetingMessages[timeOfDay];
 
-  // Calculate responsive font size and weight based on message length
-  const getResponsiveTypography = (message) => {
-    const messageLength = message.length;
-
-    // Base font sizes for different screen sizes
-    const baseSizes = {
-      xs: 1.5, // rem
-      sm: 2.0,
-      md: 2.125,
-    };
-
-    // Base font weights for different message lengths
-    const baseWeights = {
-      short: 600, // Bold for short, impactful messages
-      medium: 500, // Medium for balanced messages
-      long: 400, // Light for long messages (better readability)
-    };
-
-    // More aggressive scaling to prevent line wrapping
-    let sizeFactor = 1;
-    let weightCategory = "medium";
-
-    if (messageLength > 90) {
-      sizeFactor = 0.55; // Much smaller for very long messages
-      weightCategory = "long";
-    } else if (messageLength > 75) {
-      sizeFactor = 0.65; // Significantly smaller for long messages
-      weightCategory = "long";
-    } else if (messageLength > 60) {
-      sizeFactor = 0.75; // Smaller for medium-long messages
-      weightCategory = "long";
-    } else if (messageLength > 45) {
-      sizeFactor = 0.85; // Slightly smaller for medium messages
-      weightCategory = "medium";
-    } else if (messageLength > 30) {
-      sizeFactor = 0.95; // Barely smaller for short-medium messages
-      weightCategory = "medium";
-    } else {
-      // Very short messages (≤30 chars) keep full size and get bold weight
-      weightCategory = "short";
-    }
-
-    return {
-      fontSize: {
-        xs: `${baseSizes.xs * sizeFactor}rem`,
-        sm: `${baseSizes.sm * sizeFactor}rem`,
-        md: `${baseSizes.md * sizeFactor}rem`,
-      },
-      fontWeight: baseWeights[weightCategory],
-    };
-  };
-
   useEffect(() => {
     const interval = setInterval(() => {
       setFadeIn(false);
@@ -109,31 +57,38 @@ const Greeting = ({ name = "Friend" }) => {
   }, [messages.length]);
 
   const currentMessage = messages[messageIndex](name);
-  const responsiveTypography = getResponsiveTypography(currentMessage);
 
   return (
     <Box
       textAlign="center"
       mt={5} // More space above
       mb={5} // Space below
-      sx={{ width: "100%", maxWidth: 1000, mx: "auto" }}
+      sx={{
+        width: "100%",
+        maxWidth: "min(90vw, 1000px)", // Use 90% of viewport width, max 1000px
+        mx: "auto",
+        px: 2, // Add padding to prevent edge touching
+      }}
     >
       <Fade in={fadeIn} timeout={500}>
         <Typography
           variant="h4"
           sx={{
-            fontWeight: responsiveTypography.fontWeight,
+            fontWeight: 600, // Semi-bold for good prominence with Poppins
             color: "white",
             fontFamily: "'Poppins', 'Inter', 'Segoe UI', sans-serif",
             userSelect: "none",
             lineHeight: 1.4,
             textAlign: "center",
-            fontSize: responsiveTypography.fontSize,
+            fontSize: {
+              xs: "1.5rem", // Mobile
+              sm: "2rem", // Tablet
+              md: "2.25rem", // Desktop
+            },
             letterSpacing: "0.02em",
-            whiteSpace: "nowrap", // Force single line
-            overflow: "hidden", // Hide any overflow
-            textOverflow: "ellipsis", // Add ellipsis if somehow still too long
-            textShadow: "1px 1px 3px rgba(0, 0, 0, 0.5)",
+            // Allow text to wrap naturally to prevent cut-off
+            whiteSpace: "normal",
+            textShadow: "3px 3px 6px rgba(0, 0, 0, 0.7)",
             minHeight: "3.5rem", // Fixed minimum height to prevent layout shifts
             display: "flex",
             alignItems: "center",
