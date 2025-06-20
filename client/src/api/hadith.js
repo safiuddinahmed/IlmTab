@@ -35,87 +35,61 @@ const fetchWithTimeout = (url, timeout = 10000) => {
   ]);
 };
 
-// Fetch hadith data from hadithapi.com with fallback
+// Fetch hadith data from hadithapi.com with fallback (matches backend implementation)
 const fetchHadithData = async (book, hadithNumber) => {
   console.log('Fetching hadith:', hadithNumber, 'from book:', book);
   
+  // Try primary API first (hadithapi.com)
   try {
-    // Construct API URL using correct format
-    let apiUrl;
+    const url = `https://hadithapi.com/api/hadiths/?apiKey=${HADITH_API_KEY}&hadithNumber=${hadithNumber}&book=${book}&status=Sahih`;
+    console.log('Making API call to:', url);
     
-    if (hadithNumber) {
-      // Fetch specific hadith
-      apiUrl = `https://hadithapi.com/api/hadiths/?apiKey=${HADITH_API_KEY}&hadithNumber=${hadithNumber}&book=${book}&status=Sahih`;
-    } else {
-      // Fetch random hadith (without hadithNumber parameter)
-      apiUrl = `https://hadithapi.com/api/hadiths/?apiKey=${HADITH_API_KEY}&book=${book}&status=Sahih`;
-    }
+    const response = await fetchWithTimeout(url, 8000);
+    const json = await response.json();
     
-    console.log('Making API call to:', apiUrl);
-    
-    // Make API call with timeout
-    const response = await fetchWithTimeout(apiUrl, 8000);
-    
-    if (!response.ok) {
-      throw new Error(`API responded with status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    console.log('API response received:', data);
-    
-    // Transform API response to match our expected format
-    if (data && data.hadiths && data.hadiths.length > 0) {
-      const hadith = data.hadiths[0]; // Get first hadith from results
+    console.log('API response received:', json);
+
+    // Match backend validation exactly
+    if (response.ok && json.hadiths?.data?.[0]) {
+      const hadith = json.hadiths.data[0];
       
+      // Use exact same transformation as backend
       return {
-        number: hadith.hadithNumber || hadithNumber,
-        book: hadith.book?.name || book,
-        volume: hadith.volume || "1",
-        writer: hadith.book?.writer || "Unknown",
-        bookSlug: book,
+        number: hadith.hadithNumber,
+        book: hadith.book.bookName,
+        volume: hadith.volume,
+        writer: hadith.book.writerName,
+        bookSlug: hadith.bookSlug,
         narrator: {
-          english: hadith.hadithEnglish?.narrator || "",
-          urdu: hadith.hadithUrdu?.narrator || ""
+          english: hadith.englishNarrator,
+          urdu: hadith.urduNarrator
         },
         text: {
-          english: hadith.hadithEnglish?.body || "",
-          urdu: hadith.hadithUrdu?.body || "",
-          arabic: hadith.hadithArabic?.body || ""
+          english: hadith.hadithEnglish,
+          urdu: hadith.hadithUrdu,
+          arabic: hadith.hadithArabic
         },
         heading: {
-          english: hadith.headingEnglish || "",
-          urdu: hadith.headingUrdu || "",
-          arabic: hadith.headingArabic || ""
+          english: hadith.headingEnglish,
+          urdu: hadith.headingUrdu,
+          arabic: hadith.headingArabic
         },
         chapter: {
-          chapterNumber: hadith.chapterNumber || "0",
-          english: hadith.chapterEnglish || "",
-          urdu: hadith.chapterUrdu || "",
-          arabic: hadith.chapterArabic || ""
+          chapterNumber: hadith.chapter.chapterNumber,
+          english: hadith.chapter.chapterEnglish,
+          urdu: hadith.chapter.chapterUrdu,
+          arabic: hadith.chapter.chapterArabic
         },
-        status: hadith.status || "Sahih"
+        status: hadith.status
       };
     }
-    
-    throw new Error('Invalid API response format or no hadiths found');
-    
   } catch (error) {
-    console.warn('API call failed, using fallback data:', error.message);
-    
-    // Fallback to curated hadith collection
-    if (hadithNumber && !isNaN(hadithNumber)) {
-      const index = Math.max(0, Math.min(parseInt(hadithNumber) - 1, hadithList.length - 1));
-      const selectedHadith = { ...hadithList[index] };
-      selectedHadith.number = hadithNumber;
-      return selectedHadith;
-    }
-    
-    // Return random fallback hadith
-    const randomIndex = Math.floor(Math.random() * hadithList.length);
-    const randomHadith = { ...hadithList[randomIndex] };
-    randomHadith.number = randomIndex + 1;
-    return randomHadith;
+    console.log('Primary Hadith API failed, using fallback...', error.message);
   }
+
+  // Fallback - return a random hadith from our curated list
+  const randomIndex = Math.floor(Math.random() * hadithList.length);
+  return hadithList[randomIndex];
 };
 
 // Main API function that matches the backend endpoint exactly
