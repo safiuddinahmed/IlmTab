@@ -341,8 +341,20 @@ const QuranSearch = ({ onSelectAyah, onClose }) => {
                         index < searchResults.length - 1
                           ? "1px solid rgba(0,0,0,0.06)"
                           : "none",
+                      cursor: "pointer",
+                      transition: "all 0.3s ease",
+                      border: "1px solid transparent",
+                      borderRadius: 2,
+                      mx: 1,
+                      my: 0.5,
                       "&:hover": {
                         backgroundColor: "rgba(25, 118, 210, 0.04)",
+                        transform: "translateY(-2px)",
+                        borderColor: "rgba(25, 118, 210, 0.2)",
+                        boxShadow: "0 4px 12px rgba(25, 118, 210, 0.15)",
+                        "& .MuiTypography-subtitle2": {
+                          color: "primary.main",
+                        },
                       },
                     }}
                   >
