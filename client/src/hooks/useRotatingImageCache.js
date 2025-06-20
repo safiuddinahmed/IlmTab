@@ -205,11 +205,11 @@ export const useRotatingImageCache = () => {
           
           console.log('🔄 Rotating cache from index', currentIndex, 'to', nextIndex);
           
-          // Check if we need to prefetch more images
-          const shouldPrefetch = nextIndex >= imageCache.images.length - 2;
+          // Check if we need to prefetch more images - only on second-to-last image
+          const shouldPrefetch = nextIndex === imageCache.images.length - 2;
           
           if (shouldPrefetch && imageCache.images[0]?.id !== 'fallback') {
-            console.log('🔄 Prefetching more images...');
+            console.log('🔄 Prefetching more images on second-to-last image (index:', nextIndex, ')');
             const newImages = await fetchImages(islamicCategory);
             
             if (newImages[0]?.id !== 'fallback') {
