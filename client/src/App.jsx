@@ -719,43 +719,46 @@ function App() {
           </Suspense>
         )}
 
-        {/* Unsplash credit - hide when using fallback image */}
-        {backgroundUrl && !isUsingFallback && photoAuthorName !== "IlmTab" && (
-          <div
-            style={{
-              position: "fixed",
-              bottom: 10,
-              right: 10,
-              color: "white",
-              backgroundColor: "rgba(0, 0, 0, 0.4)",
-              padding: "4px 8px",
-              borderRadius: "4px",
-              fontSize: "0.8rem",
-              fontFamily: "Arial, sans-serif",
-              zIndex: 1000,
-              userSelect: "none",
-            }}
-          >
-            Photo by{" "}
-            <a
-              href={photoAuthorLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: "#ddd", textDecoration: "underline" }}
+        {/* Unsplash credit - hide when using fallback image or upload mode */}
+        {backgroundUrl &&
+          !isUsingFallback &&
+          photoAuthorName !== "IlmTab" &&
+          imageSource !== "upload" && (
+            <div
+              style={{
+                position: "fixed",
+                bottom: 10,
+                right: 10,
+                color: "white",
+                backgroundColor: "rgba(0, 0, 0, 0.4)",
+                padding: "4px 8px",
+                borderRadius: "4px",
+                fontSize: "0.8rem",
+                fontFamily: "Arial, sans-serif",
+                zIndex: 1000,
+                userSelect: "none",
+              }}
             >
-              {photoAuthorName}
-            </a>{" "}
-            on{" "}
-            <a
-              href="https://unsplash.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: "#ddd", textDecoration: "underline" }}
-            >
-              Unsplash
-            </a>
-          </div>
-        )}
+              Photo by{" "}
+              <a
+                href={photoAuthorLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#ddd", textDecoration: "underline" }}
+              >
+                {photoAuthorName}
+              </a>{" "}
+              on{" "}
+              <a
+                href="https://unsplash.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#ddd", textDecoration: "underline" }}
+              >
+                Unsplash
+              </a>
+            </div>
+          )}
       </div>
     </>
   );
