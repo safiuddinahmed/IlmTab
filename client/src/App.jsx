@@ -50,6 +50,8 @@ function App() {
   const [hadithLoading, setHadithLoading] = useState(false);
   const [error, setError] = useState(null);
   const [backgroundUrl, setBackgroundUrl] = useState(null);
+  const [nextBackgroundUrl, setNextBackgroundUrl] = useState(null);
+  const [backgroundLoading, setBackgroundLoading] = useState(true);
   const [photoAuthorName, setPhotoAuthorName] = useState("");
   const [photoAuthorLink, setPhotoAuthorLink] = useState("");
   const [currentSurah, setCurrentSurah] = useState(null);
@@ -79,6 +81,7 @@ function App() {
     loading: imageLoading,
     placeholderUrl,
     isUsingFallback,
+    isTransitioning: imageTransitioning,
     cacheInfo,
   } = useRotatingImageCache();
 
@@ -112,48 +115,106 @@ function App() {
   const currentUploadedImageIndex =
     backgroundSettings?.currentUploadedImageIndex || 0;
 
-  // Handle background image from rotating cache or uploaded images
+  // Enhanced background image handling with preloading and smooth transitions
   useEffect(() => {
-    if (imageSource === "upload" && uploadedImages.length > 0) {
-      // Handle uploaded images (keep existing logic)
-      const imageIndex = currentUploadedImageIndex % uploadedImages.length;
-      const selectedImage = uploadedImages[imageIndex];
-
-      const optimizedUrl = selectedImage.url.includes("unsplash.com")
-        ? buildOptimizedImageUrl(selectedImage.url)
-        : selectedImage.url;
-
-      setBackgroundUrl(optimizedUrl);
-      setPhotoAuthorName("Your Upload");
-      setPhotoAuthorLink("#");
-    } else if (imageSource === "category" && currentImage) {
-      // Use rotating cache image (including fallback) with instant placeholder feedback
-      if (placeholderUrl && !backgroundUrl) {
-        // Show blur placeholder immediately for instant feedback
-        setBackgroundUrl(placeholderUrl);
-        console.log("🖼️ Showing blur placeholder for instant feedback");
+    const handleBackgroundUpdate = async () => {
+      // Don't update background during image transitions to prevent flash
+      if (imageTransitioning) {
+        console.log("🔄 Image transitioning, keeping current background");
+        return;
       }
 
-      // Then load the optimized image (works for both regular and fallback images)
-      const optimizedUrl = buildOptimizedImageUrl(currentImage.url);
-      setBackgroundUrl(optimizedUrl);
-      setPhotoAuthorName(currentImage.authorName);
-      setPhotoAuthorLink(currentImage.authorLink);
+      let targetUrl = null;
+      let authorName = "";
+      let authorLink = "";
 
-      console.log("🖼️ Using cached image:", {
-        id: currentImage.id,
-        author: currentImage.authorName,
-        url: currentImage.url,
-        cacheInfo,
-      });
-    } else if (imageSource === "upload" && uploadedImages.length === 0) {
-      // When in upload mode but no images uploaded, use fallback
-      const fallbackUrl = buildOptimizedImageUrl("/mosque.jpg");
-      setBackgroundUrl(fallbackUrl);
-      setPhotoAuthorName("IlmTab");
-      setPhotoAuthorLink("#");
-      console.log("🖼️ Using fallback for empty upload mode");
-    }
+      if (imageSource === "upload" && uploadedImages.length > 0) {
+        // Handle uploaded images with preloading
+        const imageIndex = currentUploadedImageIndex % uploadedImages.length;
+        const selectedImage = uploadedImages[imageIndex];
+
+        targetUrl = selectedImage.url.includes("unsplash.com")
+          ? buildOptimizedImageUrl(selectedImage.url)
+          : selectedImage.url;
+
+        authorName = "Your Upload";
+        authorLink = "#";
+
+        console.log("🖼️ Processing uploaded image:", selectedImage.id);
+      } else if (imageSource === "category" && currentImage) {
+        // Use rotating cache image (including fallback)
+        targetUrl = buildOptimizedImageUrl(currentImage.url);
+        authorName = currentImage.authorName;
+        authorLink = currentImage.authorLink;
+
+        // For Unsplash images, use placeholder first if available
+        if (placeholderUrl && !backgroundUrl && !isUsingFallback) {
+          console.log("🖼️ Showing blur placeholder for instant feedback");
+          setBackgroundUrl(placeholderUrl);
+          setPhotoAuthorName(authorName);
+          setPhotoAuthorLink(authorLink);
+          setBackgroundLoading(false);
+
+          // Preload the full image in background
+          setTimeout(() => {
+            setNextBackgroundUrl(targetUrl);
+          }, 50);
+          return;
+        }
+
+        console.log("🖼️ Using cached image:", {
+          id: currentImage.id,
+          author: currentImage.authorName,
+          url: currentImage.url,
+          isUsingFallback,
+          cacheInfo,
+        });
+      } else if (imageSource === "upload" && uploadedImages.length === 0) {
+        // When in upload mode but no images uploaded, use fallback
+        targetUrl = buildOptimizedImageUrl("/mosque.jpg");
+        authorName = "IlmTab";
+        authorLink = "#";
+        console.log("🖼️ Using fallback for empty upload mode");
+      }
+
+      // Only update if the URL is actually different
+      if (targetUrl && backgroundUrl !== targetUrl) {
+        setBackgroundLoading(true);
+
+        try {
+          // Preload the image before setting it as background
+          await new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = resolve;
+            img.onerror = reject;
+            img.src = targetUrl;
+          });
+
+          // Image is loaded, now update the background smoothly
+          setNextBackgroundUrl(targetUrl);
+          setPhotoAuthorName(authorName);
+          setPhotoAuthorLink(authorLink);
+
+          // Small delay for smooth transition
+          setTimeout(() => {
+            setBackgroundUrl(targetUrl);
+            setBackgroundLoading(false);
+          }, 100);
+        } catch (error) {
+          console.warn("🖼️ Failed to preload image:", error);
+          // Fallback: set background directly even if preload failed
+          setBackgroundUrl(targetUrl);
+          setPhotoAuthorName(authorName);
+          setPhotoAuthorLink(authorLink);
+          setBackgroundLoading(false);
+        }
+      } else if (targetUrl === backgroundUrl) {
+        // Same URL, just ensure loading state is correct
+        setBackgroundLoading(false);
+      }
+    };
+
+    handleBackgroundUpdate();
   }, [
     currentImage,
     placeholderUrl,
@@ -161,7 +222,23 @@ function App() {
     uploadedImages,
     currentUploadedImageIndex,
     imageLoading,
+    imageTransitioning,
+    isUsingFallback,
+    backgroundUrl,
   ]);
+
+  // Handle next background URL transition
+  useEffect(() => {
+    if (nextBackgroundUrl && nextBackgroundUrl !== backgroundUrl) {
+      const timer = setTimeout(() => {
+        setBackgroundUrl(nextBackgroundUrl);
+        setNextBackgroundUrl(null);
+        setBackgroundLoading(false);
+      }, 200);
+
+      return () => clearTimeout(timer);
+    }
+  }, [nextBackgroundUrl, backgroundUrl]);
 
   const fetchAyah = async (surah = null, ayah = null) => {
     try {
@@ -361,8 +438,27 @@ function App() {
     backgroundPosition: "center",
     minHeight: "100vh",
     paddingTop: "2rem",
-    transition: "background-image 0.5s ease-in-out",
     position: "relative",
+    backgroundColor: backgroundUrl ? "transparent" : "#1a1a1a",
+  };
+
+  // Get background CSS classes for smooth transitions
+  const getBackgroundClasses = () => {
+    const classes = ["page-load-background"];
+
+    if (backgroundLoading) {
+      classes.push("background-loading");
+    } else {
+      classes.push("background-ready");
+    }
+
+    if (!backgroundUrl) {
+      classes.push("background-initial");
+    } else {
+      classes.push("background-crossfade");
+    }
+
+    return classes.join(" ");
   };
 
   // Helper function to get animation class
@@ -387,7 +483,7 @@ function App() {
   return (
     <>
       <CssBaseline />
-      <div style={backgroundStyle} className="page-load-background">
+      <div style={backgroundStyle} className={getBackgroundClasses()}>
         <Box
           sx={{
             minHeight: "100vh",

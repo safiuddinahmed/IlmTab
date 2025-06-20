@@ -19,8 +19,10 @@ export const useRotatingImageCache = () => {
   const [loading, setLoading] = useState(true);
   const [placeholderUrl, setPlaceholderUrl] = useState(null);
   const [isUsingFallback, setIsUsingFallback] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const fetchingRef = useRef(false);
   const preloadRef = useRef(null);
+  const uploadPreloadRef = useRef(null);
   const initializedRef = useRef(false);
 
   // Get current settings
@@ -266,8 +268,8 @@ export const useRotatingImageCache = () => {
     }
   };
 
-  // Handle uploaded image rotation
-  const handleUploadedImages = () => {
+  // Handle uploaded image rotation with preloading
+  const handleUploadedImages = async () => {
     if (uploadedImages.length === 0) {
       console.log('📁 No uploaded images, using fallback');
       setFallbackImage();
@@ -284,21 +286,68 @@ export const useRotatingImageCache = () => {
       
       console.log('🔄 Rotating uploaded image from index', currentUploadedImageIndex, 'to', nextIndex);
       
-      updateBackgroundSettings({
-        currentUploadedImageIndex: nextIndex,
-        lastRefreshTime: Date.now(),
-        isUsingFallback: false,
-        currentImageUrl: buildOptimizedImageUrl(nextUploadedImage.url)
-      });
+      // Set transitioning state to prevent flash
+      setIsTransitioning(true);
+      
+      try {
+        // Preload the next uploaded image before setting it
+        await new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => {
+            console.log('✅ Preloaded uploaded image:', nextUploadedImage.id);
+            resolve();
+          };
+          img.onerror = () => {
+            console.warn('⚠️ Failed to preload uploaded image, using anyway');
+            resolve(); // Continue even if preload fails
+          };
+          
+          // Set a timeout to prevent hanging
+          setTimeout(() => {
+            console.warn('⚠️ Preload timeout for uploaded image');
+            resolve();
+          }, 3000);
+          
+          img.src = nextUploadedImage.url;
+        });
 
-      setCurrentImage({
-        id: nextUploadedImage.id,
-        url: nextUploadedImage.url,
-        authorName: 'Your Upload',
-        authorLink: '#',
-        fetchedAt: Date.now()
-      });
-      setIsUsingFallback(false);
+        // Update settings and state after successful preload
+        updateBackgroundSettings({
+          currentUploadedImageIndex: nextIndex,
+          lastRefreshTime: Date.now(),
+          isUsingFallback: false,
+          currentImageUrl: buildOptimizedImageUrl(nextUploadedImage.url)
+        });
+
+        setCurrentImage({
+          id: nextUploadedImage.id,
+          url: nextUploadedImage.url,
+          authorName: 'Your Upload',
+          authorLink: '#',
+          fetchedAt: Date.now()
+        });
+        setIsUsingFallback(false);
+      } catch (error) {
+        console.error('❌ Error during uploaded image transition:', error);
+        // Fallback to immediate update if preloading fails
+        updateBackgroundSettings({
+          currentUploadedImageIndex: nextIndex,
+          lastRefreshTime: Date.now(),
+          isUsingFallback: false,
+          currentImageUrl: buildOptimizedImageUrl(nextUploadedImage.url)
+        });
+
+        setCurrentImage({
+          id: nextUploadedImage.id,
+          url: nextUploadedImage.url,
+          authorName: 'Your Upload',
+          authorLink: '#',
+          fetchedAt: Date.now()
+        });
+        setIsUsingFallback(false);
+      } finally {
+        setIsTransitioning(false);
+      }
     } else {
       console.log(`⏰ Refresh interval not met (${refreshInterval}), using current uploaded image`);
       const currentUploadedImage = uploadedImages[currentUploadedImageIndex];
@@ -365,13 +414,40 @@ export const useRotatingImageCache = () => {
         const optimizedUrl = buildOptimizedImageUrl(nextImage.url);
         
         preloadRef.current.onload = () => {
-          console.log('✅ Preloaded next image:', nextImage.id);
+          console.log('✅ Preloaded next Unsplash image:', nextImage.id);
         };
         
         preloadRef.current.src = optimizedUrl;
       }
     }
   }, [imageCache.currentIndex, imageCache.images, imageSource, isUsingFallback]);
+
+  // Preload next uploaded image
+  useEffect(() => {
+    if (imageSource === 'upload' && uploadedImages.length > 1 && !isUsingFallback) {
+      const nextIndex = (currentUploadedImageIndex + 1) % uploadedImages.length;
+      const nextUploadedImage = uploadedImages[nextIndex];
+      
+      if (nextUploadedImage && nextUploadedImage.url) {
+        if (uploadPreloadRef.current) {
+          uploadPreloadRef.current.onload = null;
+          uploadPreloadRef.current.onerror = null;
+        }
+        
+        uploadPreloadRef.current = new Image();
+        
+        uploadPreloadRef.current.onload = () => {
+          console.log('✅ Preloaded next uploaded image:', nextUploadedImage.id);
+        };
+        
+        uploadPreloadRef.current.onerror = () => {
+          console.warn('⚠️ Failed to preload uploaded image:', nextUploadedImage.id);
+        };
+        
+        uploadPreloadRef.current.src = nextUploadedImage.url;
+      }
+    }
+  }, [currentUploadedImageIndex, uploadedImages, imageSource, isUsingFallback]);
 
   // Initialize on mount
   useEffect(() => {
@@ -420,6 +496,7 @@ export const useRotatingImageCache = () => {
     loading,
     placeholderUrl,
     isUsingFallback,
+    isTransitioning,
     cacheInfo: {
       totalImages: imageSource === 'upload' ? uploadedImages.length : imageCache.images.length,
       currentIndex: imageSource === 'upload' ? currentUploadedImageIndex : imageCache.currentIndex,
