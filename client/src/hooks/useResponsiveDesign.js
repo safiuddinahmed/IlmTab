@@ -38,17 +38,21 @@ export const useResponsiveDesign = () => {
         setViewport('xxl');     // Ultra-wide/high-res monitors (3000px+)
       }
 
-      // Simplified scale factor calculation
-      const baseHeight = 900;
+      // Improved scale factor calculation with browser chrome compensation
+      const baseHeight = 800; // Lowered from 900 for better laptop compatibility
       const minScale = 0.5;
       const maxScale = 1.2;
       
-      let calculatedScale = height / baseHeight;
+      // Compensate for browser chrome (address bar, toolbars, etc.)
+      const chromeCompensation = 120;
+      const effectiveHeight = height - chromeCompensation;
+      
+      let calculatedScale = Math.max(effectiveHeight, height * 0.8) / baseHeight;
       
       // Apply landscape scaling only when needed
       if (landscape && height <= 800) {
         calculatedScale = calculatedScale * 0.8;
-      } else if (height < 900) {
+      } else if (height < 800) { // Updated threshold
         calculatedScale = calculatedScale * 0.9;
       }
       
@@ -209,7 +213,7 @@ export const getContainerStyles = (viewport, config, scaleFactor = 1, isLandscap
   if (viewport === 'xl' || viewport === 'xxl') {
     return {
       ...baseStyles,
-      minHeight: "calc(100vh - 1rem)",
+      minHeight: "calc(100dvh - 1rem)", // Use dvh for better mobile compatibility
       justifyContent: "center",
     };
   }
@@ -218,7 +222,7 @@ export const getContainerStyles = (viewport, config, scaleFactor = 1, isLandscap
   if (isLandscape && (viewport === 'md' || viewport === 'lg')) {
     return {
       ...baseStyles,
-      minHeight: "100vh",
+      minHeight: "100dvh", // Use dvh for better mobile compatibility
       justifyContent: "flex-start",
       paddingTop: `${0.3 * scaleFactor}rem`,
       paddingBottom: `${0.5 * scaleFactor}rem`,
@@ -230,7 +234,7 @@ export const getContainerStyles = (viewport, config, scaleFactor = 1, isLandscap
   // For all other screens (portrait mode), use centered layout
   return {
     ...baseStyles,
-    minHeight: "100vh",
+    minHeight: "100dvh", // Use dvh for better mobile compatibility
     justifyContent: "center",
     overflow: "auto",
   };

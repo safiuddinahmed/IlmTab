@@ -255,6 +255,14 @@ const DateTimeWeather = () => {
           color: "#111827",
           userSelect: "none",
           animation: "fadeInUp 0.7s ease forwards",
+          // Add sticky positioning for smaller screens to keep time/weather visible
+          ...(viewport === "xs" || viewport === "sm"
+            ? {
+                position: "sticky",
+                top: "1rem",
+                zIndex: 10,
+              }
+            : {}),
         }}
       >
         {/* Date & Time */}
