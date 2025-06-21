@@ -24,6 +24,10 @@ import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import TafsirModal from "./TafsirModal"; // Adjust path if needed
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import { useIndexedDBContext } from "../contexts/IndexedDBContext";
+import {
+  useResponsiveDesign,
+  getResponsiveConfig,
+} from "../hooks/useResponsiveDesign";
 
 const formatTime = (seconds) => {
   const mins = Math.floor(seconds / 60);
@@ -42,6 +46,15 @@ const AudioPlayer = ({
 }) => {
   const audioRef = useRef(null);
   const theme = useTheme();
+
+  // Get responsive design configuration
+  const { viewport, scaleFactor, dimensions } = useResponsiveDesign();
+  const responsiveConfig = getResponsiveConfig(
+    viewport,
+    scaleFactor,
+    false,
+    dimensions
+  );
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -134,14 +147,14 @@ const AudioPlayer = ({
       elevation={4}
       sx={{
         p: 2,
-        width: "100%",
-        maxWidth: 1000,
-        mx: "auto",
-        margin: "2rem auto",
+        width: "100%", // Take full width of parent Card
+        mx: 0, // Remove auto margins
+        margin: 0, // Remove all margins to align with Card edges
         backgroundColor: "rgba(255, 255, 255, 0.7)",
         backdropFilter: "blur(10px)",
         WebkitBackdropFilter: "blur(10px)",
         boxShadow: "0 8px 16px rgba(0,0,0,0.12)",
+        borderRadius: "0 0 8px 8px", // Match Card's bottom border radius
       }}
     >
       <audio ref={audioRef} src={src} preload="metadata" />

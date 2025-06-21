@@ -40,6 +40,13 @@ import {
   useIndexedDBContext,
 } from "./contexts/IndexedDBContext";
 import { useRotatingImageCache } from "./hooks/useRotatingImageCache";
+import {
+  useResponsiveDesign,
+  getResponsiveConfig,
+  getContainerStyles,
+  getComponentStyles,
+  shouldHideComponent,
+} from "./hooks/useResponsiveDesign";
 
 const ACCESS_KEY = "CmH0hk3YgDGkNbMvPBhbNL8n23lQwrNnrneWYr-lVlc";
 
@@ -104,6 +111,16 @@ function App() {
   const greetingsEnabled = greetingsSettings.enabled || false;
   const greetingsName = greetingsSettings.name || "";
   const tasksEnabled = tasksSettings.enabled || false;
+
+  // Use responsive design system
+  const { viewport, scaleFactor, isLandscape, dimensions } =
+    useResponsiveDesign();
+  const responsiveConfig = getResponsiveConfig(
+    viewport,
+    scaleFactor,
+    isLandscape,
+    dimensions
+  );
 
   // Background settings
   const refreshInterval = backgroundSettings?.refreshInterval || "newtab";
@@ -419,17 +436,13 @@ function App() {
         {backgroundUrl && <div style={overlayStyle} />}
 
         <Box
-          sx={{
-            minHeight: "calc(100vh - 1rem)",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            px: 2,
-            py: 1,
-            position: "relative",
-            zIndex: 1,
-          }}
+          sx={getContainerStyles(
+            viewport,
+            responsiveConfig,
+            scaleFactor,
+            isLandscape,
+            dimensions
+          )}
         >
           {/* Enhanced Error Display */}
           {error && (
@@ -496,7 +509,13 @@ function App() {
           </Box>
 
           <Box
-            sx={{ width: "100%", maxWidth: "900px", mx: "auto" }}
+            sx={getComponentStyles(
+              viewport,
+              responsiveConfig,
+              "content-container",
+              scaleFactor,
+              dimensions
+            )}
             className="view-transition-container"
           >
             {/* Ayah Content or Skeleton */}

@@ -11,6 +11,12 @@ import {
 } from "@mui/material";
 import AudioPlayer from "./AudioPlayer";
 import { transliteratedSurahNames } from "../constants/surahNames";
+import {
+  useResponsiveDesign,
+  getResponsiveConfig,
+  getComponentStyles,
+  getTypographyStyles,
+} from "../hooks/useResponsiveDesign";
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px);}
@@ -26,14 +32,18 @@ const AyahCard = ({
   onFavorite,
 }) => {
   const theme = useTheme();
+  const { viewport, scaleFactor } = useResponsiveDesign();
+  const responsiveConfig = getResponsiveConfig(viewport, scaleFactor);
 
   return (
     <Card
       sx={{
-        width: "60%",
-        maxWidth: 1000,
-        mx: "auto",
-        margin: "2rem auto", // less vertical margin (from 3rem)
+        ...getComponentStyles(
+          viewport,
+          responsiveConfig,
+          "ayah-card",
+          scaleFactor
+        ),
         borderRadius: 2,
         background:
           "linear-gradient(to bottom right, rgba(245, 245, 245, 0.7), rgba(255, 255, 255, 0.4))",
@@ -47,7 +57,6 @@ const AyahCard = ({
         },
         animation: `${fadeIn} 0.6s ease forwards`,
         overflow: "visible",
-        minHeight: "400px", // Reserve minimum space to prevent layout shifts
       }}
     >
       <Box
@@ -101,13 +110,12 @@ const AyahCard = ({
       >
         <Box
           sx={{
-            fontSize: { xs: "1.6rem", sm: "1.9rem" }, // smaller Arabic text font
+            ...getTypographyStyles(viewport, responsiveConfig, "arabic"),
             fontFamily: '"Scheherazade New", serif',
             direction: "rtl",
             textAlign: "right",
             color: "#111827",
-            marginBottom: 2, // less bottom margin
-            lineHeight: 1.6,
+            marginBottom: 2,
             userSelect: "text",
             whiteSpace: "pre-line",
           }}
@@ -121,10 +129,9 @@ const AyahCard = ({
         <Typography
           variant="body1"
           sx={{
-            fontSize: { xs: "1rem", sm: "1.15rem" }, // smaller translation font size
+            ...getTypographyStyles(viewport, responsiveConfig, "translation"),
             color: "#374151",
             fontStyle: "italic",
-            lineHeight: 1.4,
             whiteSpace: "pre-line",
           }}
           textAlign="center"

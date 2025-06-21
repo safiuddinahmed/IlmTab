@@ -7,6 +7,12 @@ import GrainIcon from "@mui/icons-material/Grain";
 import ThunderstormIcon from "@mui/icons-material/Thunderstorm";
 import AcUnitIcon from "@mui/icons-material/AcUnit";
 import { useIndexedDBContext } from "../contexts/IndexedDBContext";
+import {
+  useResponsiveDesign,
+  getResponsiveConfig,
+  getComponentStyles,
+  getTypographyStyles,
+} from "../hooks/useResponsiveDesign";
 
 const weatherCodes = {
   0: "sun",
@@ -98,6 +104,10 @@ const getWeatherIcon = (code) => {
 const DateTimeWeather = () => {
   // Use IndexedDB context instead of Redux
   const { settings } = useIndexedDBContext();
+
+  // Use responsive design system
+  const { viewport, scaleFactor } = useResponsiveDesign();
+  const responsiveConfig = getResponsiveConfig(viewport, scaleFactor);
 
   // Get weather settings from IndexedDB
   const weatherSettings = settings?.settings?.weather || {};
@@ -228,16 +238,14 @@ const DateTimeWeather = () => {
 
       <Box
         sx={{
+          ...getComponentStyles(viewport, responsiveConfig, "weather"),
           display: "flex",
           flexDirection: { xs: "column", sm: "row" },
           justifyContent: "space-between",
           alignItems: "center",
-          gap: 3,
-          px: 3,
-          py: 3,
-          width: "60%",
-          maxWidth: 1000,
-          mx: "auto",
+          gap: { xs: 2, sm: 3 },
+          px: { xs: 2, sm: 3 },
+          py: { xs: 2, sm: 3 },
           background:
             "linear-gradient(to bottom right, rgba(245, 245, 245, 0.7), rgba(255, 255, 255, 0.4))",
           backdropFilter: "blur(10px)",
@@ -251,7 +259,10 @@ const DateTimeWeather = () => {
       >
         {/* Date & Time */}
         <Box sx={{ flex: 1, textAlign: { xs: "center", sm: "left" } }}>
-          <Typography variant="h3" sx={{ fontWeight: 600, mb: 0.5 }}>
+          <Typography
+            {...getTypographyStyles(viewport, responsiveConfig, "weather-time")}
+            sx={{ fontWeight: 600, mb: 0.5 }}
+          >
             {formattedTime}
           </Typography>
 
