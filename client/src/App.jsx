@@ -50,8 +50,8 @@ function App() {
   const [hadithLoading, setHadithLoading] = useState(false);
   const [error, setError] = useState(null);
   const [backgroundUrl, setBackgroundUrl] = useState(null);
-  const [nextBackgroundUrl, setNextBackgroundUrl] = useState(null);
   const [backgroundLoading, setBackgroundLoading] = useState(true);
+  const [isLoadingBackground, setIsLoadingBackground] = useState(false);
   const [photoAuthorName, setPhotoAuthorName] = useState("");
   const [photoAuthorLink, setPhotoAuthorLink] = useState("");
   const [currentSurah, setCurrentSurah] = useState(null);
@@ -115,130 +115,52 @@ function App() {
   const currentUploadedImageIndex =
     backgroundSettings?.currentUploadedImageIndex || 0;
 
-  // Enhanced background image handling with preloading and smooth transitions
-  useEffect(() => {
-    const handleBackgroundUpdate = async () => {
-      // Don't update background during image transitions to prevent flash
-      if (imageTransitioning) {
-        console.log("🔄 Image transitioning, keeping current background");
-        return;
-      }
+  // Background switching with preloading to eliminate black flash
+  const switchBackground = async (newUrl) => {
+    if (isLoadingBackground || backgroundUrl === newUrl) return;
 
-      let targetUrl = null;
-      let authorName = "";
-      let authorLink = "";
+    setIsLoadingBackground(true);
 
-      if (imageSource === "upload" && uploadedImages.length > 0) {
-        // Handle uploaded images with preloading
-        const imageIndex = currentUploadedImageIndex % uploadedImages.length;
-        const selectedImage = uploadedImages[imageIndex];
+    try {
+      // Preload image with timeout and error handling
+      await new Promise((resolve) => {
+        const img = new Image();
 
-        targetUrl = selectedImage.url.includes("unsplash.com")
-          ? buildOptimizedImageUrl(selectedImage.url)
-          : selectedImage.url;
+        const cleanup = () => {
+          img.onload = null;
+          img.onerror = null;
+          resolve();
+        };
 
-        authorName = "Your Upload";
-        authorLink = "#";
+        img.onload = cleanup;
+        img.onerror = cleanup;
 
-        console.log("🖼️ Processing uploaded image:", selectedImage.id);
-      } else if (imageSource === "category" && currentImage) {
-        // Use rotating cache image (including fallback)
-        targetUrl = buildOptimizedImageUrl(currentImage.url);
-        authorName = currentImage.authorName;
-        authorLink = currentImage.authorLink;
+        // 3-second timeout to prevent hanging
+        setTimeout(cleanup, 3000);
 
-        // For Unsplash images, use placeholder first if available
-        if (placeholderUrl && !backgroundUrl && !isUsingFallback) {
-          console.log("🖼️ Showing blur placeholder for instant feedback");
-          setBackgroundUrl(placeholderUrl);
-          setPhotoAuthorName(authorName);
-          setPhotoAuthorLink(authorLink);
-          setBackgroundLoading(false);
+        img.src = newUrl;
+      });
 
-          // Preload the full image in background
-          setTimeout(() => {
-            setNextBackgroundUrl(targetUrl);
-          }, 50);
-          return;
-        }
-
-        console.log("🖼️ Using cached image:", {
-          id: currentImage.id,
-          author: currentImage.authorName,
-          url: currentImage.url,
-          isUsingFallback,
-          cacheInfo,
-        });
-      } else if (imageSource === "upload" && uploadedImages.length === 0) {
-        // When in upload mode but no images uploaded, use fallback
-        targetUrl = buildOptimizedImageUrl("/mosque.jpg");
-        authorName = "IlmTab";
-        authorLink = "#";
-        console.log("🖼️ Using fallback for empty upload mode");
-      }
-
-      // Only update if the URL is actually different
-      if (targetUrl && backgroundUrl !== targetUrl) {
-        setBackgroundLoading(true);
-
-        try {
-          // Preload the image before setting it as background
-          await new Promise((resolve, reject) => {
-            const img = new Image();
-            img.onload = resolve;
-            img.onerror = reject;
-            img.src = targetUrl;
-          });
-
-          // Image is loaded, now update the background smoothly
-          setNextBackgroundUrl(targetUrl);
-          setPhotoAuthorName(authorName);
-          setPhotoAuthorLink(authorLink);
-
-          // Small delay for smooth transition
-          setTimeout(() => {
-            setBackgroundUrl(targetUrl);
-            setBackgroundLoading(false);
-          }, 100);
-        } catch (error) {
-          console.warn("🖼️ Failed to preload image:", error);
-          // Fallback: set background directly even if preload failed
-          setBackgroundUrl(targetUrl);
-          setPhotoAuthorName(authorName);
-          setPhotoAuthorLink(authorLink);
-          setBackgroundLoading(false);
-        }
-      } else if (targetUrl === backgroundUrl) {
-        // Same URL, just ensure loading state is correct
-        setBackgroundLoading(false);
-      }
-    };
-
-    handleBackgroundUpdate();
-  }, [
-    currentImage,
-    placeholderUrl,
-    imageSource,
-    uploadedImages,
-    currentUploadedImageIndex,
-    imageLoading,
-    imageTransitioning,
-    isUsingFallback,
-    backgroundUrl,
-  ]);
-
-  // Handle next background URL transition
-  useEffect(() => {
-    if (nextBackgroundUrl && nextBackgroundUrl !== backgroundUrl) {
-      const timer = setTimeout(() => {
-        setBackgroundUrl(nextBackgroundUrl);
-        setNextBackgroundUrl(null);
-        setBackgroundLoading(false);
-      }, 200);
-
-      return () => clearTimeout(timer);
+      // Now switch - image is preloaded
+      setBackgroundUrl(newUrl);
+    } catch (error) {
+      console.warn("Background switch error:", error);
+      setBackgroundUrl(newUrl); // Use anyway
+    } finally {
+      setIsLoadingBackground(false);
     }
-  }, [nextBackgroundUrl, backgroundUrl]);
+  };
+
+  // Enhanced background image handling with preloading
+  useEffect(() => {
+    if (currentImage?.url) {
+      const optimizedUrl = buildOptimizedImageUrl(currentImage.url);
+      switchBackground(optimizedUrl);
+      setPhotoAuthorName(currentImage.authorName);
+      setPhotoAuthorLink(currentImage.authorLink);
+      setBackgroundLoading(false);
+    }
+  }, [currentImage]);
 
   const fetchAyah = async (surah = null, ayah = null) => {
     try {
@@ -436,10 +358,19 @@ function App() {
     backgroundImage: backgroundUrl ? `url(${backgroundUrl})` : "none",
     backgroundSize: "cover",
     backgroundPosition: "center",
+    transition: "opacity 1s ease-in-out",
     minHeight: "100vh",
     paddingTop: "1rem",
     position: "relative",
-    backgroundColor: backgroundUrl ? "transparent" : "#1a1a1a",
+    backgroundColor: backgroundUrl ? "transparent" : "#2a2a2a", // Subtle dark gray instead of black
+    opacity: backgroundUrl ? 1 : 0,
+  };
+
+  const overlayStyle = {
+    position: "absolute",
+    inset: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    zIndex: 0,
   };
 
   // Get background CSS classes for smooth transitions
@@ -484,6 +415,9 @@ function App() {
     <>
       <CssBaseline />
       <div style={backgroundStyle} className={getBackgroundClasses()}>
+        {/* Overlay for better text readability */}
+        {backgroundUrl && <div style={overlayStyle} />}
+
         <Box
           sx={{
             minHeight: "calc(100vh - 1rem)",
@@ -493,6 +427,8 @@ function App() {
             alignItems: "center",
             px: 2,
             py: 1,
+            position: "relative",
+            zIndex: 1,
           }}
         >
           {/* Enhanced Error Display */}

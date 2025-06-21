@@ -205,6 +205,7 @@ export const useRotatingImageCache = () => {
           
           console.log('🔄 Rotating cache from index', currentIndex, 'to', nextIndex);
           
+          
           // Check if we need to prefetch more images - only on second-to-last image
           const shouldPrefetch = nextIndex === imageCache.images.length - 2;
           
@@ -237,7 +238,7 @@ export const useRotatingImageCache = () => {
               setFallbackImage();
             }
           } else {
-            // Just rotate to next image
+            // Just rotate to next image (now preloaded)
             const isFallback = nextImage?.id === 'fallback';
             
             updateBackgroundSettings({
