@@ -11,6 +11,8 @@ export const useResponsiveDesign = () => {
   const [isLandscape, setIsLandscape] = useState(false);
 
   useEffect(() => {
+    let timeoutId;
+
     const updateViewport = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
@@ -27,45 +29,45 @@ export const useResponsiveDesign = () => {
       } else if (width < 900) {
         setViewport('sm');      // Small tablets
       } else if (width < 1400) {
-        setViewport('md');      // Large tablets/laptops (including 1280x800)
+        setViewport('md');      // Large tablets/laptops
       } else if (width < 1800) {
         setViewport('lg');      // Desktop monitors
       } else if (width < 3000) {
-        setViewport('xl');      // Large monitors (1800-2999px) - includes 2560x1600
+        setViewport('xl');      // Large monitors (1800-2999px)
       } else {
-        setViewport('xxl');     // Ultra-wide/high-res monitors (3000px+) - 32" 4K monitors
+        setViewport('xxl');     // Ultra-wide/high-res monitors (3000px+)
       }
 
-      // Calculate scale factor based on viewport height and orientation
-      const baseHeight = 900; // Base height for scaling
-      const minScale = 0.45; // More aggressive for landscape
-      const maxScale = 1.2; // Don't scale above 120%
+      // Simplified scale factor calculation
+      const baseHeight = 900;
+      const minScale = 0.5;
+      const maxScale = 1.2;
       
       let calculatedScale = height / baseHeight;
       
-      // Special handling for landscape orientation - LESS AGGRESSIVE SCALING
-      if (landscape && height === 768) {
-        // More generous scaling for 1366x768 laptops
-        calculatedScale = calculatedScale * 0.85; // Only 15% reduction for 1366x768
-      } else if (landscape && height <= 800) {
-        // Less aggressive scaling for other landscape modes
-        calculatedScale = calculatedScale * 0.75; // 25% reduction for landscape
-      } else if (landscape && height <= 900) {
-        calculatedScale = calculatedScale * 0.8; // 20% reduction for landscape
-      } else if (height <= 800) {
-        calculatedScale = calculatedScale * 0.85; // 15% reduction for portrait
+      // Apply landscape scaling only when needed
+      if (landscape && height <= 800) {
+        calculatedScale = calculatedScale * 0.8;
       } else if (height < 900) {
-        calculatedScale = calculatedScale * 0.9; // 10% reduction for smaller screens
+        calculatedScale = calculatedScale * 0.9;
       }
       
       calculatedScale = Math.max(minScale, Math.min(maxScale, calculatedScale));
-      
       setScaleFactor(calculatedScale);
     };
 
+    // Debounced resize handler
+    const debouncedUpdate = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(updateViewport, 300);
+    };
+
     updateViewport();
-    window.addEventListener('resize', updateViewport);
-    return () => window.removeEventListener('resize', updateViewport);
+    window.addEventListener('resize', debouncedUpdate);
+    return () => {
+      window.removeEventListener('resize', debouncedUpdate);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   return { viewport, dimensions, scaleFactor, isLandscape };
@@ -74,11 +76,7 @@ export const useResponsiveDesign = () => {
 /**
  * Get responsive configuration for components
  */
-export const getResponsiveConfig = (viewport, scaleFactor = 1, isLandscape = false, dimensions = {}) => {
-  // Detect specific resolutions for ultra-optimization
-  const is1366x768 = dimensions.width === 1366 && dimensions.height === 768;
-  const is2560x1600 = dimensions.width === 2560 && dimensions.height === 1600;
-  
+export const getResponsiveConfig = (viewport, scaleFactor = 1, isLandscape = false) => {
   const configs = {
     xs: {   // Mobile phones (320-599px)
       containerWidth: '100%',
@@ -116,10 +114,10 @@ export const getResponsiveConfig = (viewport, scaleFactor = 1, isLandscape = fal
       layout: 'compact',
       hideSecondary: false
     },
-    md: {   // Large tablets/small laptops (900-1199px)
+    md: {   // Large tablets/small laptops (900-1399px)
       containerWidth: '100%',
-      componentWidth: is1366x768 ? '95%' : (isLandscape ? '90%' : '85%'), // WIDER for 1366x768
-      maxWidth: is1366x768 ? `${1200 * scaleFactor}px` : (isLandscape ? `${1100 * scaleFactor}px` : `${800 * scaleFactor}px`), // WIDER max width for 1366x768
+      componentWidth: isLandscape ? '90%' : '85%',
+      maxWidth: isLandscape ? `${1100 * scaleFactor}px` : `${800 * scaleFactor}px`,
       fontSize: {
         arabic: `${1.7 * scaleFactor}rem`,
         translation: `${1.1 * scaleFactor}rem`,
@@ -127,9 +125,9 @@ export const getResponsiveConfig = (viewport, scaleFactor = 1, isLandscape = fal
         weatherTime: 'h4'
       },
       spacing: {
-        container: is1366x768 ? 1.5 * scaleFactor : 2 * scaleFactor,
-        component: is1366x768 ? 1.5 * scaleFactor : 2 * scaleFactor,
-        card: is1366x768 ? 1.2 * scaleFactor : (isLandscape ? 1.5 * scaleFactor : 2.5 * scaleFactor) // MORE GENEROUS spacing for 1366x768
+        container: 2 * scaleFactor,
+        component: 2 * scaleFactor,
+        card: isLandscape ? 1.5 * scaleFactor : 2.5 * scaleFactor
       },
       layout: 'standard',
       hideSecondary: false
@@ -196,11 +194,7 @@ export const getResponsiveConfig = (viewport, scaleFactor = 1, isLandscape = fal
 /**
  * Get container styles based on viewport and orientation
  */
-export const getContainerStyles = (viewport, config, scaleFactor = 1, isLandscape = false, dimensions = {}) => {
-  // Detect specific resolutions for ultra-optimization
-  const is1366x768 = dimensions.width === 1366 && dimensions.height === 768;
-  const is2560x1600 = dimensions.width === 2560 && dimensions.height === 1600;
-  
+export const getContainerStyles = (viewport, config, scaleFactor = 1, isLandscape = false) => {
   const baseStyles = {
     display: "flex",
     flexDirection: "column",
@@ -225,11 +219,11 @@ export const getContainerStyles = (viewport, config, scaleFactor = 1, isLandscap
     return {
       ...baseStyles,
       minHeight: "100vh",
-      justifyContent: "flex-start", // Start from top like portrait
-      paddingTop: is1366x768 ? `${0.5 * scaleFactor}rem` : `${0.3 * scaleFactor}rem`, // MORE GENEROUS for 1366x768
-      paddingBottom: is1366x768 ? `${0.5 * scaleFactor}rem` : `${0.5 * scaleFactor}rem`, // MORE GENEROUS for 1366x768
-      overflow: "auto", // Allow scrolling when needed
-      gap: is1366x768 ? `${0.3 * scaleFactor}rem` : `${0.2 * scaleFactor}rem`, // MORE GENEROUS gaps for 1366x768
+      justifyContent: "flex-start",
+      paddingTop: `${0.3 * scaleFactor}rem`,
+      paddingBottom: `${0.5 * scaleFactor}rem`,
+      overflow: "auto",
+      gap: `${0.2 * scaleFactor}rem`,
     };
   }
 
@@ -237,18 +231,15 @@ export const getContainerStyles = (viewport, config, scaleFactor = 1, isLandscap
   return {
     ...baseStyles,
     minHeight: "100vh",
-    justifyContent: "center", // Center content vertically
-    overflow: "auto", // Allow scrolling when needed
+    justifyContent: "center",
+    overflow: "auto",
   };
 };
 
 /**
  * Get component-specific responsive styles
  */
-export const getComponentStyles = (viewport, config, componentType = 'default', scaleFactor = 1, dimensions = {}) => {
-  // Detect 2560x1600 for taller components
-  const is2560x1600 = dimensions.width === 2560 && dimensions.height === 1600;
-  
+export const getComponentStyles = (viewport, config, componentType = 'default', scaleFactor = 1) => {
   const baseStyles = {
     width: config.componentWidth,
     maxWidth: config.maxWidth,

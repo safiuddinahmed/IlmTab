@@ -118,8 +118,7 @@ function App() {
   const responsiveConfig = getResponsiveConfig(
     viewport,
     scaleFactor,
-    isLandscape,
-    dimensions
+    isLandscape
   );
 
   // Background settings
@@ -440,8 +439,7 @@ function App() {
             viewport,
             responsiveConfig,
             scaleFactor,
-            isLandscape,
-            dimensions
+            isLandscape
           )}
         >
           {/* Enhanced Error Display */}
@@ -513,8 +511,7 @@ function App() {
               viewport,
               responsiveConfig,
               "content-container",
-              scaleFactor,
-              dimensions
+              scaleFactor
             )}
             className="view-transition-container"
           >
