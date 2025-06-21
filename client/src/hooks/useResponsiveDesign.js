@@ -233,15 +233,12 @@ export const getContainerStyles = (viewport, config, scaleFactor = 1, isLandscap
     };
   }
 
-  // For all other screens (portrait mode), use the working layout
+  // For all other screens (portrait mode), use centered layout
   return {
     ...baseStyles,
     minHeight: "100vh",
-    justifyContent: "flex-start", // Start from top
-    paddingTop: `${0.3 * scaleFactor}rem`,
-    paddingBottom: `${0.5 * scaleFactor}rem`,
+    justifyContent: "center", // Center content vertically
     overflow: "auto", // Allow scrolling when needed
-    gap: `${0.2 * scaleFactor}rem`, // Small gaps
   };
 };
 
